@@ -125,11 +125,8 @@ open samples/01-basic-map.html
 ```
 .
 ├── guide.pdf          # 学習ガイドブック
-├── guide.tex          # ガイドブックソース（LaTeX）
 ├── index.html         # Webサイト用インデックス
-├── samples/           # 30個のHTMLサンプル
-├── screenshots/       # スクリーンショット画像
-└── tools/             # ユーティリティスクリプト
+└── samples/           # 30個のHTMLサンプル
 ```
 
 ## ライセンス
