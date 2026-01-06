@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>01 - 基本的な地図表示</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>01 - 基本的な地図表示</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> Leaflet.jsを使って最も基本的な地図を表示します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>L.map() で地図オブジェクトを作成</li>
+                <li>setView() で中心座標とズームレベルを設定</li>
+                <li>L.tileLayer() でタイルレイヤー（地図画像）を追加</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="code-section">
+            <pre>
+// 地図を初期化（東京駅を中心に表示）
+const map = L.map('map').setView([35.6812, 139.7671], 13);
+
+// OpenStreetMapのタイルレイヤーを追加
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&amp;copy; &lt;a href="https://www.openstreetmap.org/copyright"&gt;OpenStreetMap&lt;/a&gt; contributors'
+}).addTo(map);
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む（CDNから取得） -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // 基本的な地図表示のサンプル
+        // ========================================
+
+        // L.map('map') で地図オブジェクトを作成
+        // 引数の 'map' は、HTMLの id="map" を持つ要素を指定している
+        // .setView() で地図の初期表示位置を設定:
+        //   - 第1引数: [緯度, 経度] の配列（東京駅の座標）
+        //   - 第2引数: ズームレベル（1=世界全体, 18=建物レベル, 13は市区町村レベル）
+        const map = L.map('map').setView([35.6812, 139.7671], 13);
+
+        // L.tileLayer() でタイルレイヤー（地図画像）を追加
+        // タイルレイヤーとは: 地図は小さな画像（タイル）を敷き詰めて表示している
+        // URLテンプレートの説明:
+        //   - {s}: サブドメイン（a, b, c のいずれか。負荷分散のため）
+        //   - {z}: ズームレベル
+        //   - {x}, {y}: タイルの座標
+        // attribution: 地図データの著作権表示（必須）
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);  // .addTo(map) で作成したタイルレイヤーを地図に追加
+    </script>
+</body>
+</html>

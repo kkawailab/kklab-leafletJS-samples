@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10 - 地図のイベント処理</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 450px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .event-log {
+            margin-top: 15px;
+            padding: 15px;
+            background: #1e1e1e;
+            color: #00ff00;
+            border-radius: 5px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .event-log .event-item {
+            margin: 3px 0;
+            padding: 2px 0;
+            border-bottom: 1px solid #333;
+        }
+        .event-log .event-type {
+            color: #ff9900;
+        }
+        .clear-btn {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .clear-btn:hover {
+            background: #c82333;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>10 - 地図のイベント処理</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> 地図上でのクリック、ズーム、移動などのイベントを処理します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>map.on() でイベントリスナーを登録</li>
+                <li>クリック時に座標を取得</li>
+                <li>ズームや移動の完了を検知</li>
+                <li>e.latlng でクリック位置の座標を取得</li>
+            </ul>
+            <p><strong>操作:</strong> 地図をクリック、ズーム、移動してイベントログを確認してください。</p>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="event-log" id="eventLog">
+            <div class="event-item">イベントログ（地図を操作してください）</div>
+        </div>
+        <button class="clear-btn" onclick="clearLog()">ログをクリア</button>
+
+        <div class="code-section">
+            <pre>
+// クリックイベント
+map.on('click', function(e) {
+    console.log('クリック位置:', e.latlng);
+    L.marker(e.latlng).addTo(map);
+});
+
+// ズームイベント
+map.on('zoomend', function() {
+    console.log('ズームレベル:', map.getZoom());
+});
+
+// 移動イベント
+map.on('moveend', function() {
+    console.log('中心座標:', map.getCenter());
+});
+
+// マウス移動イベント
+map.on('mousemove', function(e) {
+    console.log('マウス位置:', e.latlng);
+});
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // 地図のイベント処理のサンプル
+        // ユーザーの操作を検知して処理する
+        // ========================================
+
+        // 地図を初期化
+        const map = L.map('map').setView([35.6812, 139.7671], 13);
+
+        // タイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // イベントログ表示用の要素を取得
+        const eventLog = document.getElementById('eventLog');
+
+        // ----------------------------------------
+        // ログ表示用のヘルパー関数
+        // ----------------------------------------
+        function addLog(eventType, message) {
+            const time = new Date().toLocaleTimeString();
+            const item = document.createElement('div');
+            item.className = 'event-item';
+            item.innerHTML = `[${time}] <span class="event-type">${eventType}</span>: ${message}`;
+            // 最新のログを先頭に追加
+            eventLog.insertBefore(item, eventLog.firstChild);
+
+            // ログが多くなりすぎないよう、最大50件に制限
+            while (eventLog.children.length > 50) {
+                eventLog.removeChild(eventLog.lastChild);
+            }
+        }
+
+        // ログをクリアする関数
+        function clearLog() {
+            eventLog.innerHTML = '<div class="event-item">ログをクリアしました</div>';
+        }
+
+        // ----------------------------------------
+        // クリックイベント
+        // ----------------------------------------
+        // map.on('イベント名', コールバック関数) でイベントを登録
+        // コールバック関数の引数 e にはイベント情報が含まれる
+        map.on('click', function(e) {
+            // e.latlng でクリック位置の座標を取得
+            const lat = e.latlng.lat.toFixed(6);  // 緯度（小数点以下6桁）
+            const lng = e.latlng.lng.toFixed(6);  // 経度
+            addLog('click', `座標 [${lat}, ${lng}] にマーカーを追加`);
+
+            // クリック位置にマーカーを追加
+            L.marker(e.latlng)
+                .addTo(map)
+                .bindPopup(`クリック位置<br>緯度: ${lat}<br>経度: ${lng}`)
+                .openPopup();
+        });
+
+        // ----------------------------------------
+        // ダブルクリックイベント
+        // ----------------------------------------
+        // 注意: ダブルクリックはデフォルトでズームインの動作がある
+        map.on('dblclick', function(e) {
+            const lat = e.latlng.lat.toFixed(6);
+            const lng = e.latlng.lng.toFixed(6);
+            addLog('dblclick', `ダブルクリック位置 [${lat}, ${lng}]`);
+        });
+
+        // ----------------------------------------
+        // 右クリック（コンテキストメニュー）イベント
+        // ----------------------------------------
+        // カスタムメニューを表示したい時などに使用
+        map.on('contextmenu', function(e) {
+            const lat = e.latlng.lat.toFixed(6);
+            const lng = e.latlng.lng.toFixed(6);
+            addLog('contextmenu', `右クリック位置 [${lat}, ${lng}]`);
+        });
+
+        // ----------------------------------------
+        // ズームイベント
+        // ----------------------------------------
+        map.on('zoomstart', function() {
+            addLog('zoomstart', 'ズーム開始');
+        });
+
+        map.on('zoomend', function() {
+            // map.getZoom() で現在のズームレベルを取得
+            addLog('zoomend', `ズームレベル: ${map.getZoom()}`);
+        });
+
+        // ----------------------------------------
+        // 移動（パン）イベント
+        // ----------------------------------------
+        map.on('movestart', function() {
+            addLog('movestart', '移動開始');
+        });
+
+        map.on('moveend', function() {
+            // map.getCenter() で現在の中心座標を取得
+            const center = map.getCenter();
+            addLog('moveend', `中心座標 [${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}]`);
+        });
+
+        // ----------------------------------------
+        // マウス移動イベント（スロットリング付き）
+        // ----------------------------------------
+        // mousemove は頻繁に発生するため、スロットリングで制御
+        // スロットリング: 一定時間内に1回だけ処理を実行する手法
+        let lastMouseMove = 0;
+        map.on('mousemove', function(e) {
+            const now = Date.now();
+            // 前回の記録から500ms経過していれば記録
+            if (now - lastMouseMove > 500) {
+                lastMouseMove = now;
+                const lat = e.latlng.lat.toFixed(4);
+                const lng = e.latlng.lng.toFixed(4);
+                addLog('mousemove', `マウス位置 [${lat}, ${lng}]`);
+            }
+        });
+
+        // ヒント: イベントリスナーを解除するには map.off('イベント名', 関数) を使う
+    </script>
+</body>
+</html>

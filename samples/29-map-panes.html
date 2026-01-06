@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>29 - マップペイン</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 550px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .info-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        .info-box h4 {
+            margin-bottom: 10px;
+        }
+        .pane-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .pane-item {
+            padding: 5px 10px;
+            background: white;
+            border-radius: 4px;
+            font-size: 13px;
+            border: 1px solid #ddd;
+        }
+        .pane-item .z-index {
+            color: #007bff;
+            font-weight: bold;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>29 - マップペイン</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> マップペインを使ってレイヤーの重なり順を制御します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>map.createPane() でカスタムペインを作成</li>
+                <li>z-index でペインの重なり順を制御</li>
+                <li>pane オプションでレイヤーを特定のペインに追加</li>
+                <li>ラベルをポリゴンの上に表示するなど高度な制御が可能</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="info-box">
+            <h4>デフォルトのペイン構造</h4>
+            <div class="pane-list">
+                <div class="pane-item">mapPane <span class="z-index">(親)</span></div>
+                <div class="pane-item">tilePane <span class="z-index">z:200</span></div>
+                <div class="pane-item">overlayPane <span class="z-index">z:400</span></div>
+                <div class="pane-item">shadowPane <span class="z-index">z:500</span></div>
+                <div class="pane-item">markerPane <span class="z-index">z:600</span></div>
+                <div class="pane-item">tooltipPane <span class="z-index">z:650</span></div>
+                <div class="pane-item">popupPane <span class="z-index">z:700</span></div>
+            </div>
+            <h4 style="margin-top: 15px;">カスタムペイン（このサンプル）</h4>
+            <div class="pane-list">
+                <div class="pane-item">labelsPane <span class="z-index">z:450</span> (ポリゴンとマーカーの間)</div>
+                <div class="pane-item">highlightPane <span class="z-index">z:410</span> (オーバーレイの上)</div>
+            </div>
+        </div>
+
+        <div class="code-section">
+            <pre>
+// カスタムペインを作成
+map.createPane('labelsPane');
+map.getPane('labelsPane').style.zIndex = 450;
+
+// ペインを使用してレイヤーを追加
+L.tileLayer(labelTileUrl, {
+    pane: 'labelsPane'
+}).addTo(map);
+
+// ポリゴンをデフォルトのoverlayPaneに追加（z:400）
+L.polygon(coords).addTo(map);
+
+// ラベルがポリゴンの上に表示される
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // マップペイン（Map Panes）のサンプル
+        // レイヤーの重なり順を細かく制御する
+        // ========================================
+        // ペインとは: レイヤーをグループ化するコンテナ
+        // z-index でペインの重なり順を制御
+
+        // ----------------------------------------
+        // 地図を初期化
+        // ----------------------------------------
+        const map = L.map('map').setView([35.6812, 139.7671], 13);
+
+        // ========================================
+        // カスタムペインの作成
+        // ========================================
+        // デフォルトペインの z-index:
+        //   - tilePane: 200
+        //   - overlayPane: 400
+        //   - shadowPane: 500
+        //   - markerPane: 600
+        //   - tooltipPane: 650
+        //   - popupPane: 700
+
+        // ----------------------------------------
+        // ラベル用ペイン（z: 450）
+        // ----------------------------------------
+        // ポリゴン(400)の上、マーカー(600)の下に配置
+        map.createPane('labelsPane');
+        map.getPane('labelsPane').style.zIndex = 450;
+        // pointerEvents: 'none' でクリックイベントを透過
+        // ラベルをクリックしても下のレイヤーが反応する
+        map.getPane('labelsPane').style.pointerEvents = 'none';
+
+        // ----------------------------------------
+        // ハイライト用ペイン（z: 410）
+        // ----------------------------------------
+        // 通常のオーバーレイ(400)の上に配置
+        map.createPane('highlightPane');
+        map.getPane('highlightPane').style.zIndex = 410;
+
+        // ----------------------------------------
+        // 背景用ペイン（z: 350）
+        // ----------------------------------------
+        // タイル(200)の上、オーバーレイ(400)の下に配置
+        map.createPane('backgroundPane');
+        map.getPane('backgroundPane').style.zIndex = 350;
+
+        // ========================================
+        // レイヤーの配置
+        // ========================================
+
+        // ベースマップ（タイルペイン z:200）
+        // ラベルなしの地図（light_nolabels）
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // ラベルタイル（labelsPane z:450）
+        // ----------------------------------------
+        // pane オプションでカスタムペインを指定
+        // これによりラベルがポリゴンの上に表示される
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+            attribution: '',
+            pane: 'labelsPane'  // カスタムペインを指定
+        }).addTo(map);
+
+        // ----------------------------------------
+        // 背景ポリゴン（backgroundPane z:350）
+        // ----------------------------------------
+        // pane: 'backgroundPane' で背景ペインに配置
+        L.rectangle([
+            [35.66, 139.73],
+            [35.70, 139.80]
+        ], {
+            color: '#ff7800',
+            fillColor: '#ff7800',
+            fillOpacity: 0.1,
+            weight: 2,
+            pane: 'backgroundPane'  // 背景ペインを指定
+        }).addTo(map).bindPopup('背景ペイン (z:350)<br>タイルの上に表示');
+
+        // ----------------------------------------
+        // 通常のポリゴン（overlayPane z:400）
+        // ----------------------------------------
+        // pane を指定しない場合、デフォルトの overlayPane に配置
+        const normalPolygon = L.polygon([
+            [35.685, 139.755],
+            [35.695, 139.755],
+            [35.695, 139.775],
+            [35.685, 139.775]
+        ], {
+            color: '#3388ff',
+            fillColor: '#3388ff',
+            fillOpacity: 0.4
+        }).addTo(map).bindPopup('通常のポリゴン<br>overlayPane (z:400)<br>ラベルが上に表示される');
+
+        // ----------------------------------------
+        // ハイライトポリゴン（highlightPane z:410）
+        // ----------------------------------------
+        // 通常のポリゴンより上に表示される
+        L.polygon([
+            [35.675, 139.760],
+            [35.683, 139.760],
+            [35.683, 139.780],
+            [35.675, 139.780]
+        ], {
+            color: '#ff0000',
+            fillColor: '#ff0000',
+            fillOpacity: 0.4,
+            pane: 'highlightPane'  // ハイライトペインを指定
+        }).addTo(map).bindPopup('ハイライトペイン (z:410)<br>通常のポリゴンの上に表示');
+
+        // ----------------------------------------
+        // 円（overlayPane z:400）
+        // ----------------------------------------
+        L.circle([35.6900, 139.7400], {
+            radius: 500,
+            color: '#28a745',
+            fillColor: '#28a745',
+            fillOpacity: 0.3
+        }).addTo(map).bindPopup('円 (overlayPane z:400)<br>ラベルが上に表示される');
+
+        // ----------------------------------------
+        // マーカー（markerPane z:600）
+        // ----------------------------------------
+        // マーカーは常に最上位（ポップアップを除く）に表示
+        L.marker([35.6812, 139.7671])
+            .addTo(map)
+            .bindPopup('マーカー (markerPane z:600)<br>すべての上に表示');
+
+        L.marker([35.6896, 139.7006])
+            .addTo(map)
+            .bindPopup('新宿駅');
+
+        // ----------------------------------------
+        // 説明用のコントロール
+        // ----------------------------------------
+        const infoControl = L.control({ position: 'topright' });
+        infoControl.onAdd = function() {
+            const div = L.DomUtil.create('div');
+            div.style.cssText = 'background: white; padding: 10px; border-radius: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.2); max-width: 220px; font-size: 12px;';
+            div.innerHTML = `
+                <strong>ペインの重なり順</strong><br><br>
+                <div style="display: flex; align-items: center; margin: 3px 0;">
+                    <div style="width: 15px; height: 15px; background: #007bff; margin-right: 8px;"></div>
+                    マーカー (z:600)
+                </div>
+                <div style="display: flex; align-items: center; margin: 3px 0;">
+                    <div style="width: 15px; height: 15px; background: #666; margin-right: 8px;"></div>
+                    ラベルタイル (z:450)
+                </div>
+                <div style="display: flex; align-items: center; margin: 3px 0;">
+                    <div style="width: 15px; height: 15px; background: #ff0000; margin-right: 8px;"></div>
+                    ハイライト (z:410)
+                </div>
+                <div style="display: flex; align-items: center; margin: 3px 0;">
+                    <div style="width: 15px; height: 15px; background: #3388ff; margin-right: 8px;"></div>
+                    ポリゴン (z:400)
+                </div>
+                <div style="display: flex; align-items: center; margin: 3px 0;">
+                    <div style="width: 15px; height: 15px; background: #ff7800; margin-right: 8px;"></div>
+                    背景 (z:350)
+                </div>
+            `;
+            return div;
+        };
+        infoControl.addTo(map);
+
+        // ヒント: マップペインの使い方まとめ
+        // 1. map.createPane('名前') でカスタムペインを作成
+        // 2. map.getPane('名前').style.zIndex で重なり順を設定
+        // 3. レイヤーのオプションで pane: '名前' を指定
+        // 4. pointerEvents: 'none' でクリックを透過
+        // 用途: ラベルをポリゴンの上に表示、ハイライト効果など
+    </script>
+</body>
+</html>

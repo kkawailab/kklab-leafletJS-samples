@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>22 - カスタムコントロールの作成</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 550px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        /* カスタムコントロールのスタイル */
+        .search-control {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+        }
+        .search-control input {
+            width: 200px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .search-control button {
+            padding: 5px 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .toolbar-control {
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .toolbar-control button {
+            display: block;
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-size: 18px;
+            border-bottom: 1px solid #eee;
+        }
+        .toolbar-control button:hover {
+            background: #f4f4f4;
+        }
+        .toolbar-control button:last-child {
+            border-bottom: none;
+        }
+        .toolbar-control button.active {
+            background: #e3f2fd;
+        }
+        .minimap-control {
+            background: white;
+            padding: 3px;
+            border-radius: 5px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+        }
+        .minimap-control #minimap {
+            width: 150px;
+            height: 100px;
+            border-radius: 3px;
+        }
+        .stats-control {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+            font-size: 12px;
+        }
+        .stats-control h4 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>22 - カスタムコントロールの作成</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> L.Controlを拡張して独自のUIコントロールを作成します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>L.Control.extend() でコントロールクラスを作成</li>
+                <li>onAdd() でDOM要素を返す</li>
+                <li>onRemove() でクリーンアップ処理</li>
+                <li>L.DomEvent でイベント処理</li>
+            </ul>
+            <p><strong>重要:</strong> コントロール内の操作が地図に影響しないよう、<code>disableClickPropagation()</code> と <code>disableScrollPropagation()</code> を使用してください。</p>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="code-section">
+            <pre>
+// カスタムコントロールを定義
+const MyControl = L.Control.extend({
+    options: {
+        position: 'topright'
+    },
+
+    onAdd: function(map) {
+        // コンテナDOM要素を作成
+        const container = L.DomUtil.create('div', 'my-control');
+
+        // クリックイベントの伝播を停止
+        L.DomEvent.disableClickPropagation(container);
+
+        // ボタンを追加
+        const button = L.DomUtil.create('button', '', container);
+        button.innerHTML = 'Click me';
+
+        L.DomEvent.on(button, 'click', function() {
+            alert('Button clicked!');
+        });
+
+        return container;
+    },
+
+    onRemove: function(map) {
+        // クリーンアップ処理
+    }
+});
+
+// コントロールを追加
+new MyControl().addTo(map);
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // カスタムコントロール作成のサンプル
+        // L.Control.extend() を使って独自のUIを作成
+        // ========================================
+
+        // ----------------------------------------
+        // 地図を初期化
+        // ----------------------------------------
+        const map = L.map('map').setView([35.6812, 139.7671], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // サンプルデータの準備
+        // ----------------------------------------
+        const markers = [];
+        const locations = [
+            { name: '東京駅', lat: 35.6812, lng: 139.7671 },
+            { name: '新宿駅', lat: 35.6896, lng: 139.7006 },
+            { name: '渋谷駅', lat: 35.6580, lng: 139.7016 }
+        ];
+
+        locations.forEach(loc => {
+            const m = L.marker([loc.lat, loc.lng]).addTo(map).bindPopup(loc.name);
+            markers.push(m);
+        });
+
+        // ========================================
+        // 1. 検索コントロール
+        // ========================================
+        // テキスト入力とボタンを持つ検索UI
+        // L.Control.extend() でLeafletのコントロールクラスを拡張
+        const SearchControl = L.Control.extend({
+            // options: コントロールの設定
+            // position: 配置位置（topleft, topright, bottomleft, bottomright）
+            options: { position: 'topleft' },
+
+            // onAdd: コントロールが地図に追加されたときに呼ばれる
+            // 必ずDOM要素を返す必要がある
+            onAdd: function(map) {
+                // L.DomUtil.create(タグ名, CSSクラス, 親要素) でDOM要素を作成
+                const container = L.DomUtil.create('div', 'search-control');
+
+                // 入力フィールドを作成
+                const input = L.DomUtil.create('input', '', container);
+                input.type = 'text';
+                input.placeholder = '場所を検索...';
+                input.id = 'searchInput';
+
+                // ボタンを作成
+                const button = L.DomUtil.create('button', '', container);
+                button.innerHTML = '検索';
+
+                // 重要: コントロール上のクリックが地図に伝播しないようにする
+                // これがないと、ボタンをクリックしたときに地図もクリックされてしまう
+                L.DomEvent.disableClickPropagation(container);
+
+                // L.DomEvent.on() でイベントリスナーを登録
+                L.DomEvent.on(button, 'click', function() {
+                    const query = document.getElementById('searchInput').value.toLowerCase();
+                    const found = locations.find(l => l.name.includes(query));
+                    if (found) {
+                        map.setView([found.lat, found.lng], 15);
+                        markers.find(m => m.getLatLng().lat === found.lat).openPopup();
+                    } else {
+                        alert('場所が見つかりませんでした');
+                    }
+                });
+
+                return container;
+            }
+        });
+
+        // new でインスタンス化して addTo() で地図に追加
+        new SearchControl().addTo(map);
+
+        // ========================================
+        // 2. ツールバーコントロール
+        // ========================================
+        // 複数のアクションボタンを縦に並べたツールバー
+        const ToolbarControl = L.Control.extend({
+            options: { position: 'topleft' },
+
+            onAdd: function(map) {
+                const container = L.DomUtil.create('div', 'toolbar-control');
+
+                // ----------------------------------------
+                // ホームボタン: 初期位置に戻る
+                // ----------------------------------------
+                const homeBtn = L.DomUtil.create('button', '', container);
+                homeBtn.innerHTML = '🏠';
+                homeBtn.title = '初期位置に戻る';
+                L.DomEvent.on(homeBtn, 'click', function(e) {
+                    // L.DomEvent.stop() でイベントの伝播を完全に停止
+                    L.DomEvent.stop(e);
+                    map.setView([35.6812, 139.7671], 13);
+                });
+
+                // ----------------------------------------
+                // 全体表示ボタン: 全マーカーが見える範囲にフィット
+                // ----------------------------------------
+                const fitBtn = L.DomUtil.create('button', '', container);
+                fitBtn.innerHTML = '🔲';
+                fitBtn.title = '全マーカーを表示';
+                L.DomEvent.on(fitBtn, 'click', function(e) {
+                    L.DomEvent.stop(e);
+                    // featureGroup を作成して getBounds() で境界を取得
+                    const group = L.featureGroup(markers);
+                    // pad(0.2) で20%の余白を追加
+                    map.fitBounds(group.getBounds().pad(0.2));
+                });
+
+                // ----------------------------------------
+                // 位置情報ボタン: 現在地を取得
+                // ----------------------------------------
+                const locateBtn = L.DomUtil.create('button', '', container);
+                locateBtn.innerHTML = '📍';
+                locateBtn.title = '現在地を取得';
+                L.DomEvent.on(locateBtn, 'click', function(e) {
+                    L.DomEvent.stop(e);
+                    // map.locate() でブラウザの位置情報を取得
+                    map.locate({ setView: true, maxZoom: 16 });
+                });
+
+                // ----------------------------------------
+                // フルスクリーンボタン
+                // ----------------------------------------
+                const fullscreenBtn = L.DomUtil.create('button', '', container);
+                fullscreenBtn.innerHTML = '⛶';
+                fullscreenBtn.title = 'フルスクリーン';
+                L.DomEvent.on(fullscreenBtn, 'click', function(e) {
+                    L.DomEvent.stop(e);
+                    // Fullscreen API を使用
+                    const mapContainer = map.getContainer();
+                    if (!document.fullscreenElement) {
+                        mapContainer.requestFullscreen();
+                    } else {
+                        document.exitFullscreen();
+                    }
+                });
+
+                L.DomEvent.disableClickPropagation(container);
+                return container;
+            }
+        });
+
+        new ToolbarControl().addTo(map);
+
+        // ========================================
+        // 3. ミニマップコントロール
+        // ========================================
+        // メインマップの概要を表示する小さな地図
+        // メインマップの移動に追従する
+        const MinimapControl = L.Control.extend({
+            options: { position: 'bottomright' },
+
+            onAdd: function(map) {
+                const container = L.DomUtil.create('div', 'minimap-control');
+                const minimapDiv = L.DomUtil.create('div', '', container);
+                minimapDiv.id = 'minimap';
+
+                // クリックとスクロールの伝播を無効化
+                L.DomEvent.disableClickPropagation(container);
+                L.DomEvent.disableScrollPropagation(container);
+
+                // setTimeout で遅延実行（DOM要素が準備できてから初期化）
+                setTimeout(() => {
+                    // ミニマップ用の地図を初期化
+                    // インタラクションを無効化してシンプルに
+                    const minimap = L.map('minimap', {
+                        zoomControl: false,          // ズームボタン非表示
+                        attributionControl: false,   // 著作権表示非表示
+                        dragging: false,             // ドラッグ無効
+                        scrollWheelZoom: false       // スクロールズーム無効
+                    }).setView(map.getCenter(), map.getZoom() - 4);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(minimap);
+
+                    // 表示範囲を示す矩形
+                    const bounds = map.getBounds();
+                    const rect = L.rectangle(bounds, { color: '#ff0000', weight: 2, fill: false }).addTo(minimap);
+
+                    // メインマップの移動に追従
+                    map.on('move', function() {
+                        minimap.setView(map.getCenter(), map.getZoom() - 4);
+                        rect.setBounds(map.getBounds());
+                    });
+                }, 100);
+
+                return container;
+            }
+        });
+
+        new MinimapControl().addTo(map);
+
+        // ========================================
+        // 4. 統計情報コントロール
+        // ========================================
+        // 地図の状態をリアルタイムで表示
+        // 移動やズーム時に自動更新
+        const StatsControl = L.Control.extend({
+            options: { position: 'bottomleft' },
+
+            onAdd: function(map) {
+                const container = L.DomUtil.create('div', 'stats-control');
+                container.id = 'statsPanel';
+                this.updateStats(container, map);
+
+                // moveend, zoomend イベントで統計を更新
+                // アロー関数を使うことで this を保持
+                map.on('moveend zoomend', () => this.updateStats(container, map));
+
+                L.DomEvent.disableClickPropagation(container);
+                return container;
+            },
+
+            // 統計情報を更新するメソッド
+            updateStats: function(container, map) {
+                const center = map.getCenter();
+                const bounds = map.getBounds();
+                // 現在の表示範囲内にあるマーカーをカウント
+                const visibleMarkers = markers.filter(m => bounds.contains(m.getLatLng())).length;
+
+                container.innerHTML = `
+                    <h4>地図情報</h4>
+                    <div>ズーム: ${map.getZoom()}</div>
+                    <div>中心: ${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}</div>
+                    <div>表示中のマーカー: ${visibleMarkers}/${markers.length}</div>
+                `;
+            }
+        });
+
+        new StatsControl().addTo(map);
+
+        // ヒント: カスタムコントロール作成のポイント
+        // 1. L.Control.extend() で新しいコントロールクラスを定義
+        // 2. onAdd() でDOM要素を作成して返す
+        // 3. L.DomEvent.disableClickPropagation() でイベント伝播を防止
+        // 4. onRemove() でクリーンアップ（イベントリスナーの削除など）
+    </script>
+</body>
+</html>

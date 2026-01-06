@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02 - マーカーを追加</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>02 - マーカーを追加</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> 地図上に位置を示すマーカーを追加します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>L.marker() でマーカーを作成</li>
+                <li>addTo(map) でマーカーを地図に追加</li>
+                <li>座標は [緯度, 経度] の配列で指定</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="code-section">
+            <pre>
+// マーカーを作成して地図に追加
+const marker = L.marker([35.6812, 139.7671]).addTo(map);
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // マーカーを追加するサンプル
+        // ========================================
+
+        // 地図を初期化
+        // ズームレベル15は、通りや建物がはっきり見えるレベル
+        const map = L.map('map').setView([35.6812, 139.7671], 15);
+
+        // タイルレイヤーを追加（基本的な地図表示に必須）
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // マーカーの作成と追加
+        // ----------------------------------------
+        // L.marker([緯度, 経度]) でマーカーオブジェクトを作成
+        // .addTo(map) で地図にマーカーを追加
+        // 注意: 座標は「緯度（南北）, 経度（東西）」の順番
+        //       Google Mapsのリンクなどでは逆の場合があるので注意
+        const marker = L.marker([35.6812, 139.7671]).addTo(map);
+
+        // markerオブジェクトは変数に保存しておくと、
+        // 後からマーカーの位置を変更したり、削除したりできる
+    </script>
+</body>
+</html>

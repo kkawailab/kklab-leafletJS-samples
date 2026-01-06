@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>28 - 非地理的マップ</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 550px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: #2d3e50;
+        }
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .controls button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background: #0056b3;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>28 - 非地理的マップ</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> Leafletを使って地図以外のもの（フロアプラン、ゲームマップなど）を表示します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>L.CRS.Simple を使用して単純な座標系を利用</li>
+                <li>画像オーバーレイでカスタム画像を表示</li>
+                <li>ピクセル座標でマーカーやシェイプを配置</li>
+                <li>用途: フロアプラン、ゲームマップ、座席表など</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="controls">
+            <button onclick="showFloor1()">1F</button>
+            <button onclick="showFloor2()">2F</button>
+            <button onclick="resetView()">全体表示</button>
+        </div>
+
+        <div class="code-section">
+            <pre>
+// 単純な座標系を使用
+const map = L.map('map', {
+    crs: L.CRS.Simple,  // 緯度経度ではなくピクセル座標
+    minZoom: -2,
+    maxZoom: 2
+});
+
+// 画像の範囲（ピクセル座標）
+const bounds = [[0, 0], [1000, 1000]];
+
+// 画像オーバーレイ
+L.imageOverlay('floorplan.png', bounds).addTo(map);
+
+// ピクセル座標でマーカーを配置
+L.marker([500, 300]).addTo(map).bindPopup('会議室A');
+
+// ビューを画像にフィット
+map.fitBounds(bounds);
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // 非地理的マップのサンプル
+        // Leafletを地図以外の用途で使用
+        // ========================================
+        // 用途: フロアプラン、ゲームマップ、座席表、画像ビューアなど
+
+        // ----------------------------------------
+        // 地図を初期化（Simple CRS）
+        // ----------------------------------------
+        // L.CRS.Simple: 緯度経度ではなくピクセル座標を使用
+        // 画像やカスタムマップに最適
+        const map = L.map('map', {
+            crs: L.CRS.Simple,   // 単純な座標系（ピクセル座標）
+            minZoom: -1,         // 縮小可能（-1 = 50%）
+            maxZoom: 2           // 拡大可能（2 = 400%）
+        });
+
+        // ----------------------------------------
+        // フロアプランのサイズと境界
+        // ----------------------------------------
+        const mapWidth = 800;    // 画像の幅（ピクセル）
+        const mapHeight = 600;   // 画像の高さ（ピクセル）
+        // bounds: [[y_min, x_min], [y_max, x_max]]
+        const bounds = [[0, 0], [mapHeight, mapWidth]];
+
+        // SVGでフロアプランを作成
+        const floorPlanSvg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="${mapWidth}" height="${mapHeight}" viewBox="0 0 ${mapWidth} ${mapHeight}">
+                <!-- 背景 -->
+                <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+                <!-- 外壁 -->
+                <rect x="50" y="50" width="700" height="500" fill="none" stroke="#333" stroke-width="4"/>
+
+                <!-- 部屋の区切り -->
+                <!-- 会議室A -->
+                <rect x="50" y="50" width="200" height="200" fill="#e3f2fd" stroke="#333" stroke-width="2"/>
+                <text x="150" y="150" text-anchor="middle" font-size="14" fill="#333">会議室A</text>
+
+                <!-- 会議室B -->
+                <rect x="250" y="50" width="200" height="200" fill="#e8f5e9" stroke="#333" stroke-width="2"/>
+                <text x="350" y="150" text-anchor="middle" font-size="14" fill="#333">会議室B</text>
+
+                <!-- オフィスエリア -->
+                <rect x="50" y="250" width="400" height="300" fill="#fff3e0" stroke="#333" stroke-width="2"/>
+                <text x="250" y="400" text-anchor="middle" font-size="16" fill="#333">オフィスエリア</text>
+
+                <!-- 休憩室 -->
+                <rect x="450" y="50" width="300" height="200" fill="#fce4ec" stroke="#333" stroke-width="2"/>
+                <text x="600" y="150" text-anchor="middle" font-size="14" fill="#333">休憩室</text>
+
+                <!-- サーバールーム -->
+                <rect x="450" y="250" width="150" height="150" fill="#e0e0e0" stroke="#333" stroke-width="2"/>
+                <text x="525" y="330" text-anchor="middle" font-size="12" fill="#333">サーバー</text>
+
+                <!-- トイレ -->
+                <rect x="600" y="250" width="150" height="150" fill="#e1f5fe" stroke="#333" stroke-width="2"/>
+                <text x="675" y="330" text-anchor="middle" font-size="12" fill="#333">トイレ</text>
+
+                <!-- 倉庫 -->
+                <rect x="450" y="400" width="300" height="150" fill="#efebe9" stroke="#333" stroke-width="2"/>
+                <text x="600" y="480" text-anchor="middle" font-size="14" fill="#333">倉庫</text>
+
+                <!-- 入口 -->
+                <rect x="200" y="545" width="100" height="10" fill="#4caf50"/>
+                <text x="250" y="540" text-anchor="middle" font-size="12" fill="#333">入口</text>
+
+                <!-- デスクを配置（オフィスエリア内） -->
+                <rect x="80" y="280" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+                <rect x="80" y="340" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+                <rect x="80" y="400" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+                <rect x="80" y="460" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+
+                <rect x="180" y="280" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+                <rect x="180" y="340" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+                <rect x="180" y="400" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+                <rect x="180" y="460" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+
+                <rect x="280" y="280" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+                <rect x="280" y="340" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+                <rect x="280" y="400" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+                <rect x="280" y="460" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+
+                <rect x="380" y="280" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+                <rect x="380" y="340" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+                <rect x="380" y="400" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+                <rect x="380" y="460" width="60" height="40" fill="#fff" stroke="#666" stroke-width="1"/>
+            </svg>
+        `;
+
+        // ----------------------------------------
+        // SVGをData URLに変換
+        // ----------------------------------------
+        // SVG文字列をBase64エンコードしてData URLに変換
+        const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(floorPlanSvg)));
+
+        // ----------------------------------------
+        // 画像オーバーレイを追加
+        // ----------------------------------------
+        // L.imageOverlay(画像URL, 境界) で画像を配置
+        const floorPlan = L.imageOverlay(svgDataUrl, bounds).addTo(map);
+
+        // fitBounds() で画像全体が表示されるようにビューを調整
+        map.fitBounds(bounds);
+
+        // ----------------------------------------
+        // マーカーアイコンの作成関数
+        // ----------------------------------------
+        function createIcon(emoji) {
+            return L.divIcon({
+                className: '',
+                html: `<div style="font-size: 20px;">${emoji}</div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+        }
+
+        // ----------------------------------------
+        // 設備マーカーを配置
+        // ----------------------------------------
+        // 注意: Y座標の反転が必要
+        // SVGの原点は左上（y=0が上）、Leafletは左下（y=0が下）
+        // そのため、y座標は (mapHeight - SVGのy座標) で計算
+        const markers = [
+            { pos: [mapHeight - 150, 150], name: '会議室A', icon: '📋', info: '定員: 8名\nプロジェクター: あり' },
+            { pos: [mapHeight - 150, 350], name: '会議室B', icon: '📋', info: '定員: 6名\nホワイトボード: あり' },
+            { pos: [mapHeight - 150, 600], name: '休憩室', icon: '☕', info: 'コーヒーメーカー\n自販機あり' },
+            { pos: [mapHeight - 330, 525], name: 'サーバールーム', icon: '🖥️', info: '入室制限あり' },
+            { pos: [mapHeight - 330, 675], name: 'トイレ', icon: '🚻', info: '男女共用' },
+            { pos: [mapHeight - 480, 600], name: '倉庫', icon: '📦', info: '備品保管' },
+            { pos: [mapHeight - 545, 250], name: '入口', icon: '🚪', info: 'メインエントランス' }
+        ];
+
+        // 各マーカーを配置
+        // L.CRS.Simple では座標は [y, x] の順
+        markers.forEach(m => {
+            L.marker(m.pos, { icon: createIcon(m.icon) })
+                .addTo(map)
+                .bindPopup(`<b>${m.name}</b><br><pre>${m.info}</pre>`);
+        });
+
+        // ----------------------------------------
+        // デスクに番号を付ける
+        // ----------------------------------------
+        const deskPositions = [];
+        let deskNum = 1;
+        for (let col = 0; col < 4; col++) {
+            for (let row = 0; row < 4; row++) {
+                const x = 110 + col * 100;
+                const y = 300 + row * 60;
+                deskPositions.push({
+                    pos: [mapHeight - y, x],
+                    num: deskNum++
+                });
+            }
+        }
+
+        deskPositions.forEach(desk => {
+            const deskIcon = L.divIcon({
+                className: '',
+                html: `<div style="font-size: 10px; color: #666; text-align: center;">${desk.num}</div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            L.marker(desk.pos, { icon: deskIcon })
+                .addTo(map)
+                .bindPopup(`デスク ${desk.num}`);
+        });
+
+        // ----------------------------------------
+        // 階層切り替え機能（デモ）
+        // ----------------------------------------
+        // 実際のアプリでは別の画像オーバーレイに切り替える
+        function showFloor1() {
+            alert('1Fを表示（実際のアプリでは別のフロアプラン画像を読み込みます）');
+        }
+
+        function showFloor2() {
+            alert('2Fを表示（実際のアプリでは別のフロアプラン画像を読み込みます）');
+        }
+
+        function resetView() {
+            // 全体表示に戻る
+            map.fitBounds(bounds);
+        }
+
+        // ----------------------------------------
+        // スケール表示（カスタム）
+        // ----------------------------------------
+        // L.CRS.Simple では通常のスケールコントロールは使えない
+        const scaleControl = L.control({ position: 'bottomleft' });
+        scaleControl.onAdd = function() {
+            const div = L.DomUtil.create('div');
+            div.style.cssText = 'background: white; padding: 5px 10px; border-radius: 3px; font-size: 12px;';
+            div.innerHTML = '1目盛り = 100px';
+            return div;
+        };
+        scaleControl.addTo(map);
+
+        // ヒント: 非地理的マップのポイント
+        // 1. crs: L.CRS.Simple でピクセル座標を使用
+        // 2. L.imageOverlay() で画像を配置
+        // 3. Y座標の反転に注意（必要に応じて計算）
+        // 4. 用途: フロアプラン、ゲームマップ、座席表、美術館ガイドなど
+    </script>
+</body>
+</html>

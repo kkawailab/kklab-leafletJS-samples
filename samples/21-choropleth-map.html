@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>21 - コロプレスマップ（色分け地図）</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 550px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .info {
+            padding: 10px 15px;
+            background: white;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        .info h4 {
+            margin: 0 0 5px;
+            color: #777;
+        }
+        .legend {
+            line-height: 18px;
+            color: #555;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>21 - コロプレスマップ（色分け地図）</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> データ値に基づいて地域を色分けする主題図を作成します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>データ値に応じた色の段階分け</li>
+                <li>マウスオーバーでハイライト表示</li>
+                <li>情報パネルと凡例の追加</li>
+                <li>インタラクティブな地図操作</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="code-section">
+            <pre>
+// 値に基づいて色を返す
+function getColor(d) {
+    return d > 15000 ? '#800026' :
+           d > 12000 ? '#BD0026' :
+           d > 9000  ? '#E31A1C' :
+           d > 6000  ? '#FC4E2A' :
+           d > 3000  ? '#FD8D3C' :
+                       '#FFEDA0';
+}
+
+// スタイル関数
+function style(feature) {
+    return {
+        fillColor: getColor(feature.properties.density),
+        weight: 2,
+        opacity: 1,
+        color: 'white',
+        fillOpacity: 0.7
+    };
+}
+
+// ハイライト
+function highlightFeature(e) {
+    const layer = e.target;
+    layer.setStyle({
+        weight: 5,
+        color: '#666',
+        fillOpacity: 0.9
+    });
+}
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // コロプレスマップ（色分け地図）のサンプル
+        // データの値に応じて地域を色分けして表示する
+        // 用途: 人口密度、選挙結果、経済指標の可視化など
+        // ========================================
+
+        // ----------------------------------------
+        // GeoJSONデータの準備
+        // ----------------------------------------
+        // 実際のプロジェクトでは外部ファイルから読み込むことが多い
+        // ここではサンプルとして東京23区風の架空データを使用
+        const tokyoData = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": { "name": "千代田区", "density": 5500, "population": 67000 },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[139.74, 35.70], [139.77, 35.70], [139.77, 35.68], [139.74, 35.68], [139.74, 35.70]]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "中央区", "density": 16000, "population": 170000 },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[139.77, 35.70], [139.80, 35.70], [139.80, 35.67], [139.77, 35.67], [139.77, 35.70]]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "港区", "density": 12500, "population": 260000 },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[139.72, 35.68], [139.76, 35.68], [139.76, 35.64], [139.72, 35.64], [139.72, 35.68]]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "新宿区", "density": 18500, "population": 350000 },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[139.68, 35.72], [139.72, 35.72], [139.72, 35.68], [139.68, 35.68], [139.68, 35.72]]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "文京区", "density": 20000, "population": 230000 },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[139.72, 35.73], [139.76, 35.73], [139.76, 35.70], [139.72, 35.70], [139.72, 35.73]]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "台東区", "density": 21000, "population": 210000 },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[139.76, 35.73], [139.80, 35.73], [139.80, 35.70], [139.76, 35.70], [139.76, 35.73]]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "墨田区", "density": 19000, "population": 270000 },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[139.80, 35.73], [139.84, 35.73], [139.84, 35.69], [139.80, 35.69], [139.80, 35.73]]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "江東区", "density": 10000, "population": 520000 },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[139.80, 35.69], [139.85, 35.69], [139.85, 35.64], [139.80, 35.64], [139.80, 35.69]]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "品川区", "density": 17000, "population": 420000 },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[139.72, 35.64], [139.76, 35.64], [139.76, 35.60], [139.72, 35.60], [139.72, 35.64]]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "目黒区", "density": 19500, "population": 290000 },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[139.68, 35.66], [139.72, 35.66], [139.72, 35.62], [139.68, 35.62], [139.68, 35.66]]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "渋谷区", "density": 15000, "population": 230000 },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[139.68, 35.68], [139.72, 35.68], [139.72, 35.66], [139.68, 35.66], [139.68, 35.68]]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "世田谷区", "density": 16000, "population": 940000 },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[139.62, 35.66], [139.68, 35.66], [139.68, 35.60], [139.62, 35.60], [139.62, 35.66]]]
+                    }
+                }
+            ]
+        };
+
+        // ----------------------------------------
+        // 地図を初期化
+        // ----------------------------------------
+        const map = L.map('map').setView([35.68, 139.75], 12);
+
+        // コロプレスマップには薄い色のベースマップが適している
+        // データの色分けが見やすくなる
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // 色分け関数（getColor）
+        // ----------------------------------------
+        // 値に応じて段階的に色を返す
+        // 三項演算子を連結して閾値ごとに色を指定
+        // 暖色系グラデーション: 薄い黄色→赤→濃い赤
+        function getColor(d) {
+            return d > 20000 ? '#800026' :
+                   d > 18000 ? '#BD0026' :
+                   d > 16000 ? '#E31A1C' :
+                   d > 14000 ? '#FC4E2A' :
+                   d > 12000 ? '#FD8D3C' :
+                   d > 10000 ? '#FEB24C' :
+                   d > 5000  ? '#FED976' :
+                               '#FFEDA0';
+        }
+
+        // ----------------------------------------
+        // スタイル関数
+        // ----------------------------------------
+        // GeoJSONの各フィーチャーに適用されるスタイルを返す
+        // feature.properties からデータ値を取得して色を決定
+        function style(feature) {
+            return {
+                fillColor: getColor(feature.properties.density), // データに基づく塗りつぶし色
+                weight: 2,              // 境界線の太さ
+                opacity: 1,             // 境界線の透明度
+                color: 'white',         // 境界線の色
+                dashArray: '3',         // 破線パターン
+                fillOpacity: 0.7        // 塗りつぶしの透明度
+            };
+        }
+
+        // ----------------------------------------
+        // ハイライト関数
+        // ----------------------------------------
+        // マウスオーバー時に該当エリアを強調表示
+        function highlightFeature(e) {
+            const layer = e.target;
+            layer.setStyle({
+                weight: 5,
+                color: '#666',
+                dashArray: '',
+                fillOpacity: 0.9
+            });
+            // bringToFront() でレイヤーを最前面に移動
+            layer.bringToFront();
+            // 情報パネルを更新
+            info.update(layer.feature.properties);
+        }
+
+        // ----------------------------------------
+        // ハイライト解除関数
+        // ----------------------------------------
+        // マウスアウト時に元のスタイルに戻す
+        // resetStyle() で元のスタイルに戻す
+        function resetHighlight(e) {
+            geojsonLayer.resetStyle(e.target);
+            info.update();
+        }
+
+        // ----------------------------------------
+        // ズーム関数
+        // ----------------------------------------
+        // クリック時に該当エリアにズーム
+        function zoomToFeature(e) {
+            // getBounds() でフィーチャーの境界を取得
+            map.fitBounds(e.target.getBounds());
+        }
+
+        // ----------------------------------------
+        // イベントバインド関数
+        // ----------------------------------------
+        // 各フィーチャーにイベントリスナーを登録
+        function onEachFeature(feature, layer) {
+            layer.on({
+                mouseover: highlightFeature,
+                mouseout: resetHighlight,
+                click: zoomToFeature
+            });
+        }
+
+        // ----------------------------------------
+        // GeoJSONレイヤーを追加
+        // ----------------------------------------
+        // L.geoJSON() のオプション:
+        //   - style: 各フィーチャーのスタイルを返す関数
+        //   - onEachFeature: 各フィーチャーに対して実行される関数
+        const geojsonLayer = L.geoJSON(tokyoData, {
+            style: style,
+            onEachFeature: onEachFeature
+        }).addTo(map);
+
+        // ----------------------------------------
+        // 情報パネル（カスタムコントロール）
+        // ----------------------------------------
+        // マウスオーバーした地域の詳細情報を表示
+        const info = L.control();
+
+        // onAdd: コントロールが地図に追加されたときに呼ばれる
+        info.onAdd = function(map) {
+            // DOM要素を作成
+            this._div = L.DomUtil.create('div', 'info');
+            this.update();
+            return this._div;
+        };
+
+        // update: 情報パネルの内容を更新
+        // props が渡された場合はそのデータを表示
+        // props がない場合はデフォルトメッセージを表示
+        info.update = function(props) {
+            this._div.innerHTML = '<h4>東京23区 人口密度</h4>' + (props ?
+                '<b>' + props.name + '</b><br>' +
+                props.density.toLocaleString() + ' 人/km²<br>' +
+                '人口: ' + props.population.toLocaleString() + '人'
+                : 'エリアにマウスを乗せてください');
+        };
+
+        info.addTo(map);
+
+        // ----------------------------------------
+        // 凡例（レジェンド）
+        // ----------------------------------------
+        // 色と値の対応を表示
+        const legend = L.control({position: 'bottomright'});
+
+        legend.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'info legend');
+            // 凡例に表示する閾値の配列
+            const grades = [0, 5000, 10000, 12000, 14000, 16000, 18000, 20000];
+            const labels = [];
+
+            div.innerHTML = '<h4>人口密度<br>(人/km²)</h4>';
+
+            // 各閾値に対応する色のボックスとラベルを生成
+            for (let i = 0; i < grades.length; i++) {
+                div.innerHTML +=
+                    '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+                    grades[i].toLocaleString() + (grades[i + 1] ? '&ndash;' + grades[i + 1].toLocaleString() + '<br>' : '+');
+            }
+
+            return div;
+        };
+
+        legend.addTo(map);
+
+        // ヒント: コロプレスマップのポイント
+        // 1. 色の選択: 順序データには連続的なグラデーションが適している
+        // 2. 閾値の設定: データの分布に応じて適切な区切りを設定
+        // 3. 凡例は必須: 色と値の対応を明確に示す
+        // 4. インタラクション: ホバーやクリックで詳細情報を表示
+    </script>
+</body>
+</html>

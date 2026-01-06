@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>27 - WMSレイヤー</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 550px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .info-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        .info-box h4 {
+            margin-bottom: 10px;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>27 - WMSレイヤー</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> Web Map Service (WMS) を利用して地理空間データを地図上に表示します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>L.tileLayer.wms() でWMSレイヤーを追加</li>
+                <li>layers パラメータで表示するレイヤーを指定</li>
+                <li>format で画像フォーマットを指定</li>
+                <li>transparent: true で背景を透過</li>
+            </ul>
+            <p><strong>注意:</strong></p>
+            <ul>
+                <li>このサンプルはWMSの概念を説明するもので、実際のWMSサーバーへの接続例を示しています</li>
+                <li>WMS 1.3.0では座標軸順序が緯度・経度になります。表示がずれる場合は version: '1.1.1' を試してください</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="info-box">
+            <h4>WMSについて</h4>
+            <p>WMS (Web Map Service) は、OGC (Open Geospatial Consortium) が策定した地理情報を提供するための標準プロトコルです。</p>
+            <ul>
+                <li>気象データ、地形図、衛星画像などを配信</li>
+                <li>GetCapabilities: 利用可能なレイヤー情報を取得</li>
+                <li>GetMap: 地図画像を取得</li>
+                <li>GetFeatureInfo: 特定位置の属性情報を取得</li>
+            </ul>
+        </div>
+
+        <div class="code-section">
+            <pre>
+// WMSレイヤーの基本的な使い方
+const wmsLayer = L.tileLayer.wms('https://example.com/wms', {
+    layers: 'layer_name',      // 表示するレイヤー
+    format: 'image/png',       // 画像フォーマット
+    transparent: true,         // 背景透過
+    version: '1.1.1',          // WMSバージョン
+    attribution: 'Data source'
+}).addTo(map);
+
+// 複数レイヤーを表示
+const multiLayer = L.tileLayer.wms('https://example.com/wms', {
+    layers: 'layer1,layer2',   // カンマ区切りで複数指定
+    styles: 'style1,style2'    // 各レイヤーのスタイル
+});
+
+// パラメータの動的変更
+wmsLayer.setParams({ layers: 'new_layer' });
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // WMS（Web Map Service）レイヤーのサンプル
+        // 地理空間データをサーバーから取得して表示
+        // ========================================
+        // WMSとは: OGC標準の地図配信プロトコル
+        // 用途: 気象データ、地形図、衛星画像などの表示
+
+        // ----------------------------------------
+        // 地図を初期化（日本全体を表示）
+        // ----------------------------------------
+        const map = L.map('map').setView([36.0, 138.0], 6);
+
+        // ベースマップ
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // WMSレイヤーの使い方（参考）
+        // ----------------------------------------
+        // 注意: 実際のWMSサーバーのURLは適宜変更してください
+        // ここではWMSの構文例を示しています
+
+        // シミュレートされたWMSオーバーレイ（概念説明用）
+        // 実際のプロジェクトでは以下のような形式でWMSを使用します:
+        /*
+        // L.tileLayer.wms() でWMSレイヤーを作成
+        const wmsExample = L.tileLayer.wms('https://example-wms-server.com/wms', {
+            layers: 'weather:precipitation',  // 表示するレイヤー名
+            format: 'image/png',              // 画像フォーマット
+            transparent: true,                // 背景を透過
+            version: '1.3.0',                 // WMSバージョン
+            crs: L.CRS.EPSG4326               // 座標参照系
+        });
+        */
+
+        // ----------------------------------------
+        // デモ用: 国土地理院のタイルレイヤー
+        // ----------------------------------------
+        // WMSではないが、オーバーレイの概念を理解するのに適している
+
+        // 地形図オーバーレイ（色別標高図）
+        const terrainOverlay = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/relief/{z}/{x}/{y}.png', {
+            attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',
+            opacity: 0.5,     // 透明度（0〜1）
+            maxZoom: 15       // 最大ズームレベル
+        });
+
+        // 淡色地図
+        const elevationOverlay = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png', {
+            attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',
+            opacity: 0.7
+        });
+
+        // 航空写真タイル
+        const photoOverlay = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg', {
+            attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>',
+            maxZoom: 18
+        });
+
+        // ----------------------------------------
+        // レイヤーコントロール
+        // ----------------------------------------
+        const baseLayers = {
+            'OpenStreetMap': osmLayer,
+            '航空写真': photoOverlay
+        };
+
+        const overlays = {
+            '色別標高図': terrainOverlay,
+            '淡色地図': elevationOverlay
+        };
+
+        L.control.layers(baseLayers, overlays, {
+            collapsed: false
+        }).addTo(map);
+
+        // ----------------------------------------
+        // WMS GetFeatureInfo のシミュレーション
+        // ----------------------------------------
+        // 実際のWMSでは、クリック位置の属性情報を取得できる
+        // GetFeatureInfo リクエストを使用
+        map.on('click', function(e) {
+            const lat = e.latlng.lat.toFixed(4);
+            const lng = e.latlng.lng.toFixed(4);
+
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent(`
+                    <strong>クリック位置情報</strong><br>
+                    緯度: ${lat}<br>
+                    経度: ${lng}<br>
+                    <small>（実際のWMSではGetFeatureInfoで<br>属性情報を取得できます）</small>
+                `)
+                .openOn(map);
+        });
+
+        // ----------------------------------------
+        // 情報パネル
+        // ----------------------------------------
+        const infoControl = L.control({ position: 'topright' });
+        infoControl.onAdd = function() {
+            const div = L.DomUtil.create('div');
+            div.style.cssText = 'background: white; padding: 10px; border-radius: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.2); max-width: 200px;';
+            div.innerHTML = `
+                <strong>WMSレイヤーの例</strong><br>
+                <small>
+                このサンプルでは国土地理院の<br>
+                タイルサービスを使用しています。<br><br>
+                実際のWMSサーバーでは<br>
+                L.tileLayer.wms() を使用します。
+                </small>
+            `;
+            return div;
+        };
+        infoControl.addTo(map);
+
+        // ヒント: WMSレイヤーの使い方まとめ
+        // 1. L.tileLayer.wms(url, options) でレイヤーを作成
+        // 2. 主なオプション:
+        //    - layers: 表示するレイヤー名（カンマ区切りで複数可）
+        //    - format: 'image/png' または 'image/jpeg'
+        //    - transparent: true で背景透過
+        //    - version: '1.1.1' または '1.3.0'
+        // 3. setParams() でパラメータを動的に変更可能
+    </script>
+</body>
+</html>

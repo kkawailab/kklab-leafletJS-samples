@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30 - 総合アプリケーション（店舗検索）</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f0f2f5;
+        }
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 350px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        .sidebar-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .sidebar-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .sidebar-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .search-box {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .search-box input:focus {
+            border-color: #667eea;
+        }
+        .filters {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .filter-btn {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .filter-btn:hover {
+            background: #f0f0f0;
+        }
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .store-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .store-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .store-item:hover {
+            background: #f8f9fa;
+        }
+        .store-item.active {
+            background: #e8f0fe;
+            border-left: 4px solid #667eea;
+        }
+        .store-item h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .store-item .category {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #e9ecef;
+            border-radius: 10px;
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .store-item .address {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        .store-item .distance {
+            font-size: 12px;
+            color: #999;
+        }
+        .store-item .rating {
+            color: #ffc107;
+            font-size: 13px;
+        }
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+        .store-count {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            font-size: 13px;
+            color: #666;
+            border-bottom: 1px solid #eee;
+        }
+        /* カスタムポップアップ */
+        .custom-popup .leaflet-popup-content-wrapper {
+            border-radius: 10px;
+        }
+        .custom-popup .leaflet-popup-content {
+            margin: 15px;
+        }
+        .popup-content h3 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .popup-content .info {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+        .popup-content .action-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: 40vh;
+            }
+            #map {
+                height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>店舗検索</h1>
+                <p>お近くの店舗を探す</p>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="店舗名・住所で検索..." oninput="filterStores()">
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" data-category="all" onclick="setCategory('all')">すべて</button>
+                <button class="filter-btn" data-category="cafe" onclick="setCategory('cafe')">カフェ</button>
+                <button class="filter-btn" data-category="restaurant" onclick="setCategory('restaurant')">レストラン</button>
+                <button class="filter-btn" data-category="shop" onclick="setCategory('shop')">ショップ</button>
+            </div>
+            <div class="store-count" id="storeCount">0件の店舗</div>
+            <div class="store-list" id="storeList"></div>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // 総合アプリケーション（店舗検索）
+        // これまで学んだ技術を組み合わせた実践的なサンプル
+        // ========================================
+        // 使用技術:
+        // - マーカーの動的追加・削除（25章）
+        // - カスタムアイコン（11章）
+        // - ポップアップ（4章）
+        // - イベント処理（8章）
+        // - UIとの連携
+
+        // ----------------------------------------
+        // 店舗データ
+        // ----------------------------------------
+        // 実際のアプリではAPIから取得することが多い
+        // ここではサンプルデータを配列で定義
+        const stores = [
+            {
+                id: 1,
+                name: 'カフェ 東京ステーション',
+                category: 'cafe',
+                lat: 35.6812,
+                lng: 139.7671,
+                address: '東京都千代田区丸の内1-9-1',
+                phone: '03-1234-5678',
+                hours: '7:00 - 22:00',
+                rating: 4.5,
+                icon: '☕'
+            },
+            {
+                id: 2,
+                name: 'イタリアンレストラン ミラノ',
+                category: 'restaurant',
+                lat: 35.6850,
+                lng: 139.7700,
+                address: '東京都千代田区丸の内2-5-1',
+                phone: '03-2345-6789',
+                hours: '11:00 - 23:00',
+                rating: 4.2,
+                icon: '🍝'
+            },
+            {
+                id: 3,
+                name: 'ブックカフェ 有楽町',
+                category: 'cafe',
+                lat: 35.6750,
+                lng: 139.7630,
+                address: '東京都千代田区有楽町1-1-1',
+                phone: '03-3456-7890',
+                hours: '9:00 - 21:00',
+                rating: 4.7,
+                icon: '📚'
+            },
+            {
+                id: 4,
+                name: '和食 銀座',
+                category: 'restaurant',
+                lat: 35.6716,
+                lng: 139.7640,
+                address: '東京都中央区銀座4-1-1',
+                phone: '03-4567-8901',
+                hours: '11:30 - 22:00',
+                rating: 4.8,
+                icon: '🍣'
+            },
+            {
+                id: 5,
+                name: 'ファッションショップ 銀座',
+                category: 'shop',
+                lat: 35.6720,
+                lng: 139.7680,
+                address: '東京都中央区銀座5-2-1',
+                phone: '03-5678-9012',
+                hours: '10:00 - 20:00',
+                rating: 4.0,
+                icon: '👗'
+            },
+            {
+                id: 6,
+                name: 'スターバックス 丸の内',
+                category: 'cafe',
+                lat: 35.6830,
+                lng: 139.7620,
+                address: '東京都千代田区丸の内3-1-1',
+                phone: '03-6789-0123',
+                hours: '7:00 - 22:00',
+                rating: 4.3,
+                icon: '☕'
+            },
+            {
+                id: 7,
+                name: '中華料理 龍',
+                category: 'restaurant',
+                lat: 35.6790,
+                lng: 139.7580,
+                address: '東京都千代田区内幸町1-1-1',
+                phone: '03-7890-1234',
+                hours: '11:00 - 22:00',
+                rating: 4.1,
+                icon: '🥟'
+            },
+            {
+                id: 8,
+                name: '雑貨店 東京ギフト',
+                category: 'shop',
+                lat: 35.6870,
+                lng: 139.7650,
+                address: '東京都千代田区大手町1-1-1',
+                phone: '03-8901-2345',
+                hours: '10:00 - 19:00',
+                rating: 4.4,
+                icon: '🎁'
+            },
+            {
+                id: 9,
+                name: 'カフェ＆バー 夜の東京',
+                category: 'cafe',
+                lat: 35.6780,
+                lng: 139.7700,
+                address: '東京都中央区日本橋1-1-1',
+                phone: '03-9012-3456',
+                hours: '12:00 - 24:00',
+                rating: 4.6,
+                icon: '🍸'
+            },
+            {
+                id: 10,
+                name: 'フレンチビストロ パリ',
+                category: 'restaurant',
+                lat: 35.6730,
+                lng: 139.7550,
+                address: '東京都千代田区霞が関1-1-1',
+                phone: '03-0123-4567',
+                hours: '11:30 - 23:00',
+                rating: 4.9,
+                icon: '🥖'
+            }
+        ];
+
+        // ----------------------------------------
+        // 地図を初期化
+        // ----------------------------------------
+        // 東京駅周辺を中心に表示
+        const map = L.map('map').setView([35.6780, 139.7650], 14);
+
+        // ベースマップ（CartoDB Light - モダンなデザイン）
+        // 店舗検索アプリでは、マーカーが見やすい淡色地図がおすすめ
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // アプリケーション状態を管理する変数
+        // ----------------------------------------
+        // オブジェクト形式でマーカーを管理（IDでアクセス可能）
+        let markers = {};           // 店舗ID => マーカーオブジェクト
+        let currentCategory = 'all'; // 現在選択中のカテゴリ
+        let activeStoreId = null;    // 現在選択中の店舗ID
+
+        // ----------------------------------------
+        // カスタムアイコンを作成する関数
+        // ----------------------------------------
+        // L.divIcon() を使って絵文字ベースのアイコンを作成
+        // isActive: 選択状態かどうかでサイズと色を変更
+        function createIcon(emoji, isActive = false) {
+            // 選択状態に応じてサイズを変更
+            const size = isActive ? 40 : 30;
+            // 選択状態に応じて背景色を変更
+            const bg = isActive ? '#667eea' : 'white';
+            const fontSize = isActive ? 24 : 18;
+
+            // L.divIcon() でHTML要素をアイコンとして使用
+            return L.divIcon({
+                className: '',  // デフォルトのクラスを無効化
+                html: `<div style="
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: ${bg};
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: ${fontSize}px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                    border: 2px solid white;
+                    transition: all 0.3s;
+                ">${emoji}</div>`,
+                iconSize: [size, size],           // アイコンのサイズ
+                iconAnchor: [size/2, size/2],     // アイコンの中心を基準点に
+                popupAnchor: [0, -size/2]         // ポップアップの位置調整
+            });
+        }
+
+        // ----------------------------------------
+        // 星評価を文字列で生成するヘルパー関数
+        // ----------------------------------------
+        // 例: rating=4.5 → "★★★★☆ (4.5)"
+        function generateStars(rating) {
+            const fullStars = Math.floor(rating);    // 整数部分（塗りつぶし星の数）
+            const halfStar = rating % 1 >= 0.5;      // 0.5以上なら半星を表示
+            let stars = '★'.repeat(fullStars);       // 塗りつぶし星を追加
+            if (halfStar) stars += '☆';              // 半星（空の星）を追加
+            stars += '☆'.repeat(5 - fullStars - (halfStar ? 1 : 0));  // 残りを空の星で埋める
+            return stars + ` (${rating})`;
+        }
+
+        // ----------------------------------------
+        // ポップアップのHTMLコンテンツを生成
+        // ----------------------------------------
+        // 店舗情報を見やすくフォーマットして表示
+        function createPopupContent(store) {
+            return `
+                <div class="popup-content">
+                    <h3>${store.icon} ${store.name}</h3>
+                    <div class="info">
+                        <div>${store.address}</div>
+                        <div>📞 ${store.phone}</div>
+                        <div>🕐 ${store.hours}</div>
+                        <div class="rating">⭐ ${generateStars(store.rating)}</div>
+                    </div>
+                    <a href="#" class="action-btn" onclick="alert('ルート案内を表示')">ルート案内</a>
+                </div>
+            `;
+        }
+
+        // ----------------------------------------
+        // マーカーを地図に追加する関数
+        // ----------------------------------------
+        // カテゴリフィルターを適用してマーカーを表示
+        function addMarkers() {
+            // 既存のマーカーをすべて削除（リセット）
+            // map.removeLayer() でマーカーを地図から削除
+            Object.values(markers).forEach(m => map.removeLayer(m));
+            markers = {};  // マーカー管理オブジェクトをクリア
+
+            // 各店舗に対してマーカーを作成
+            stores.forEach(store => {
+                // カテゴリフィルター: 選択カテゴリに一致しない場合はスキップ
+                if (currentCategory !== 'all' && store.category !== currentCategory) return;
+
+                // L.marker() でマーカーを作成し、addTo() で地図に追加
+                const marker = L.marker([store.lat, store.lng], {
+                    icon: createIcon(store.icon)  // カスタムアイコンを設定
+                }).addTo(map);
+
+                // bindPopup() でポップアップをバインド
+                // className でカスタムスタイルを適用
+                marker.bindPopup(createPopupContent(store), {
+                    className: 'custom-popup',
+                    maxWidth: 300
+                });
+
+                // マーカークリック時に店舗を選択
+                // アロー関数で店舗IDを渡す
+                marker.on('click', () => selectStore(store.id));
+
+                // マーカーをIDで管理できるようにオブジェクトに保存
+                markers[store.id] = marker;
+            });
+        }
+
+        // ----------------------------------------
+        // サイドバーの店舗リストを更新する関数
+        // ----------------------------------------
+        // 検索ワードとカテゴリでフィルタリングしてリストを表示
+        function updateStoreList() {
+            // 検索ボックスの値を取得（小文字に変換して比較しやすく）
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const listElement = document.getElementById('storeList');
+
+            // カテゴリと検索ワードでフィルタリング
+            // filter() で条件に一致する店舗のみ抽出
+            const filteredStores = stores.filter(store => {
+                // カテゴリフィルター
+                const matchCategory = currentCategory === 'all' || store.category === currentCategory;
+                // テキスト検索（店舗名または住所に含まれるか）
+                const matchSearch = store.name.toLowerCase().includes(searchQuery) ||
+                                   store.address.toLowerCase().includes(searchQuery);
+                return matchCategory && matchSearch;
+            });
+
+            // 件数を表示
+            document.getElementById('storeCount').textContent = `${filteredStores.length}件の店舗`;
+
+            // リストのHTMLを生成
+            // map() で各店舗をHTMLに変換し、join() で結合
+            listElement.innerHTML = filteredStores.map(store => `
+                <div class="store-item ${activeStoreId === store.id ? 'active' : ''}"
+                     onclick="selectStore(${store.id})">
+                    <span class="category">${getCategoryLabel(store.category)}</span>
+                    <h3>${store.icon} ${store.name}</h3>
+                    <div class="address">${store.address}</div>
+                    <div class="rating">${generateStars(store.rating)}</div>
+                </div>
+            `).join('');
+        }
+
+        // ----------------------------------------
+        // カテゴリのラベル（表示名）を取得
+        // ----------------------------------------
+        // 英語のカテゴリ名を日本語に変換
+        function getCategoryLabel(category) {
+            const labels = {
+                cafe: 'カフェ',
+                restaurant: 'レストラン',
+                shop: 'ショップ'
+            };
+            return labels[category] || category;  // 未定義なら元の値を返す
+        }
+
+        // ----------------------------------------
+        // 店舗を選択する関数（リスト or マーカークリック時）
+        // ----------------------------------------
+        // マーカーのハイライトと地図の移動を行う
+        function selectStore(storeId) {
+            // 店舗データを検索
+            const store = stores.find(s => s.id === storeId);
+            if (!store) return;  // 見つからなければ終了
+
+            // 以前のアクティブマーカーを通常状態に戻す
+            // setIcon() でアイコンを動的に変更
+            if (activeStoreId && markers[activeStoreId]) {
+                const prevStore = stores.find(s => s.id === activeStoreId);
+                markers[activeStoreId].setIcon(createIcon(prevStore.icon, false));
+            }
+
+            // 新しい店舗をアクティブに設定
+            activeStoreId = storeId;
+
+            // 選択したマーカーをハイライト状態に
+            if (markers[storeId]) {
+                // setIcon() でアイコンをアクティブ状態に変更
+                markers[storeId].setIcon(createIcon(store.icon, true));
+                // openPopup() でポップアップを表示
+                markers[storeId].openPopup();
+            }
+
+            // setView() で地図の中心を移動し、ズームイン
+            map.setView([store.lat, store.lng], 16);
+
+            // サイドバーのリストを更新（選択状態を反映）
+            updateStoreList();
+        }
+
+        // ----------------------------------------
+        // カテゴリフィルターを設定する関数
+        // ----------------------------------------
+        // フィルターボタンクリック時に呼び出される
+        function setCategory(category) {
+            currentCategory = category;
+
+            // ボタンのアクティブ状態を更新
+            // classList.toggle() で条件に応じてクラスを付け外し
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === category);
+            });
+
+            // 選択をリセットしてマーカーとリストを更新
+            activeStoreId = null;
+            addMarkers();
+            updateStoreList();
+        }
+
+        // ----------------------------------------
+        // 検索フィルター関数
+        // ----------------------------------------
+        // 検索ボックスの入力時に呼び出される（oninput）
+        function filterStores() {
+            // リストを更新
+            updateStoreList();
+
+            // マーカーの表示/非表示を検索結果に合わせて更新
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+
+            stores.forEach(store => {
+                // フィルター条件をチェック
+                const matchCategory = currentCategory === 'all' || store.category === currentCategory;
+                const matchSearch = store.name.toLowerCase().includes(searchQuery) ||
+                                   store.address.toLowerCase().includes(searchQuery);
+
+                // 条件に一致するマーカーのみ表示
+                if (markers[store.id]) {
+                    if (matchCategory && matchSearch) {
+                        // addTo() でマーカーを地図に追加（再表示）
+                        markers[store.id].addTo(map);
+                    } else {
+                        // removeLayer() でマーカーを非表示
+                        map.removeLayer(markers[store.id]);
+                    }
+                }
+            });
+        }
+
+        // ----------------------------------------
+        // アプリケーションの初期化
+        // ----------------------------------------
+        addMarkers();       // 全マーカーを追加
+        updateStoreList();  // リストを表示
+
+        // ヒント: 店舗検索アプリの構成要素
+        // 1. 店舗データ: 配列またはAPIから取得
+        // 2. マーカー管理: オブジェクトでIDとマーカーを紐付け
+        // 3. フィルタリング: カテゴリと検索ワードで絞り込み
+        // 4. UI連携: リストとマーカーを同期
+        // 5. インタラクション: クリックで選択、地図移動
+    </script>
+</body>
+</html>

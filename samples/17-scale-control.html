@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17 - スケールコントロールとその他のコントロール</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 550px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        /* カスタムコントロールのスタイル */
+        .custom-control {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+        }
+        .coord-control {
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .home-button {
+            width: 30px;
+            height: 30px;
+            background: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+        }
+        .home-button:hover {
+            background: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>17 - スケールコントロールとその他のコントロール</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> 地図にスケール（縮尺）やその他の標準コントロールを追加します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>L.control.scale() で縮尺バーを追加</li>
+                <li>L.control.zoom() でズームボタン（デフォルトで表示）</li>
+                <li>L.control.attribution() で著作権表示</li>
+                <li>position オプションで配置を変更（topright, topleft, bottomright, bottomleft）</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="code-section">
+            <pre>
+// スケールコントロールを追加
+L.control.scale({
+    maxWidth: 200,
+    metric: true,      // メートル法
+    imperial: true,    // マイル法
+    position: 'bottomleft'
+}).addTo(map);
+
+// ズームコントロールの位置を変更
+map.zoomControl.setPosition('topright');
+
+// カスタムコントロールを作成
+const customControl = L.Control.extend({
+    options: { position: 'bottomright' },
+    onAdd: function(map) {
+        const container = L.DomUtil.create('div', 'custom-control');
+        container.innerHTML = 'カスタム情報';
+        return container;
+    }
+});
+new customControl().addTo(map);
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // スケールコントロールとカスタムコントロールのサンプル
+        // ========================================
+
+        // ----------------------------------------
+        // 地図を初期化
+        // ----------------------------------------
+        // zoomControl: false でデフォルトのズームボタンを無効化
+        // 後で別の位置に追加する
+        const map = L.map('map', {
+            center: [35.6812, 139.7671],
+            zoom: 13,
+            zoomControl: false  // デフォルトのズームコントロールを無効化
+        });
+
+        // タイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // ズームコントロールを右上に追加
+        // ----------------------------------------
+        // position: 配置位置（topright, topleft, bottomright, bottomleft）
+        L.control.zoom({
+            position: 'topright'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // スケールコントロール（縮尺バー）を追加
+        // ----------------------------------------
+        // 地図の縮尺を視覚的に表示
+        L.control.scale({
+            maxWidth: 200,     // 最大幅（ピクセル）
+            metric: true,      // メートル法を表示
+            imperial: true,    // マイル法を表示
+            position: 'bottomleft'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // カスタムコントロールの作成
+        // ----------------------------------------
+        // L.Control.extend() で既存のコントロールを拡張
+
+        // 座標表示コントロール
+        const CoordControl = L.Control.extend({
+            options: {
+                position: 'bottomright'
+            },
+            // onAdd: コントロールが地図に追加されたときに呼ばれる
+            // DOM要素を作成して返す
+            onAdd: function(map) {
+                // L.DomUtil.create() でDOM要素を作成
+                // 第1引数: タグ名, 第2引数: CSSクラス名
+                const container = L.DomUtil.create('div', 'custom-control coord-control');
+                container.id = 'coord-display';
+                container.innerHTML = '緯度: --, 経度: --';
+
+                // 重要: コントロール上のクリックが地図に伝播しないようにする
+                L.DomEvent.disableClickPropagation(container);
+
+                return container;
+            }
+        });
+        // new でインスタンス化して addTo() で地図に追加
+        new CoordControl().addTo(map);
+
+        // マウス移動で座標を更新
+        map.on('mousemove', function(e) {
+            document.getElementById('coord-display').innerHTML =
+                `緯度: ${e.latlng.lat.toFixed(6)}, 経度: ${e.latlng.lng.toFixed(6)}`;
+        });
+
+        // ----------------------------------------
+        // ホームボタンコントロール
+        // ----------------------------------------
+        // クリックすると初期位置に戻る
+        const HomeControl = L.Control.extend({
+            options: {
+                position: 'topleft'
+            },
+            onAdd: function(map) {
+                const container = L.DomUtil.create('div', '');
+                const button = L.DomUtil.create('button', 'home-button', container);
+                button.innerHTML = '🏠';
+                button.title = '初期位置に戻る';
+
+                // L.DomEvent.on() でイベントリスナーを登録
+                L.DomEvent.on(button, 'click', function(e) {
+                    // stopPropagation() でイベントの伝播を停止
+                    L.DomEvent.stopPropagation(e);
+                    // 初期位置に戻る
+                    map.setView([35.6812, 139.7671], 13);
+                });
+
+                L.DomEvent.disableClickPropagation(container);
+
+                return container;
+            }
+        });
+        new HomeControl().addTo(map);
+
+        // ----------------------------------------
+        // 情報パネルコントロール
+        // ----------------------------------------
+
+        // 情報パネルコントロール
+        const InfoControl = L.Control.extend({
+            options: {
+                position: 'topright'
+            },
+            onAdd: function(map) {
+                const container = L.DomUtil.create('div', 'custom-control');
+                container.innerHTML = `
+                    <strong>地図情報</strong><br>
+                    <span id="zoom-level">ズーム: ${map.getZoom()}</span><br>
+                    <span id="center-pos">中心: 読み込み中...</span>
+                `;
+                container.style.maxWidth = '200px';
+                container.style.fontSize = '12px';
+
+                L.DomEvent.disableClickPropagation(container);
+
+                return container;
+            }
+        });
+        new InfoControl().addTo(map);
+
+        // ズーム・移動時に情報を更新
+        function updateInfo() {
+            const center = map.getCenter();
+            document.getElementById('zoom-level').textContent = `ズーム: ${map.getZoom()}`;
+            document.getElementById('center-pos').textContent =
+                `中心: ${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
+        }
+
+        map.on('zoomend moveend', updateInfo);
+        updateInfo();
+
+        // マーカー追加
+        L.marker([35.6812, 139.7671])
+            .addTo(map)
+            .bindPopup('東京駅');
+    </script>
+</body>
+</html>

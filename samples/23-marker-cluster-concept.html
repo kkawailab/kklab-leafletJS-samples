@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>23 - マーカークラスタリングの概念</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .controls button {
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+        }
+        .controls button:hover {
+            background: #0056b3;
+        }
+        .info-panel {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        /* クラスタアイコンのスタイル */
+        .cluster-icon {
+            background: rgba(0, 123, 255, 0.8);
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            border: 3px solid white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .cluster-small {
+            background: rgba(40, 167, 69, 0.8);
+        }
+        .cluster-medium {
+            background: rgba(255, 193, 7, 0.8);
+            color: #333;
+        }
+        .cluster-large {
+            background: rgba(220, 53, 69, 0.8);
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>23 - マーカークラスタリングの概念</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> 多数のマーカーをグループ化して表示するクラスタリングの基本概念を学びます。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>多数のマーカーを距離に基づいてグループ化</li>
+                <li>ズームレベルに応じてクラスタを分割/結合</li>
+                <li>クラスタアイコンで含まれるマーカー数を表示</li>
+                <li>実際のプロジェクトでは Leaflet.markercluster プラグインを使用</li>
+            </ul>
+            <p><strong>注意:</strong> これは概念を理解するためのシンプルな実装です。本番では専用プラグインを推奨します。</p>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="controls">
+            <button onclick="addRandomMarkers(50)">50個追加</button>
+            <button onclick="addRandomMarkers(100)">100個追加</button>
+            <button onclick="clearMarkers()">クリア</button>
+            <button onclick="toggleClustering()">クラスタリング切替</button>
+        </div>
+
+        <div class="info-panel">
+            <span id="markerCount">マーカー数: 0</span> |
+            <span id="clusterCount">クラスタ数: 0</span> |
+            <span id="clusteringStatus">クラスタリング: ON</span>
+        </div>
+
+        <div class="code-section">
+            <pre>
+// シンプルなクラスタリングの概念
+// 実際のプロジェクトでは Leaflet.markercluster を使用してください
+
+// マーカーをクラスタ化する関数
+function clusterMarkers(markers, radius) {
+    const clusters = [];
+
+    markers.forEach(marker => {
+        let added = false;
+
+        // 既存のクラスタに追加できるか確認
+        for (let cluster of clusters) {
+            if (distance(marker, cluster.center) < radius) {
+                cluster.markers.push(marker);
+                added = true;
+                break;
+            }
+        }
+
+        // 新しいクラスタを作成
+        if (!added) {
+            clusters.push({
+                center: marker.getLatLng(),
+                markers: [marker]
+            });
+        }
+    });
+
+    return clusters;
+}
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // マーカークラスタリングの概念サンプル
+        // 多数のマーカーをグループ化して表示
+        // ========================================
+        // 注意: これは概念を理解するためのシンプルな実装です
+        // 実際のプロジェクトでは Leaflet.markercluster プラグインを使用してください
+        // https://github.com/Leaflet/Leaflet.markercluster
+
+        // ----------------------------------------
+        // 地図を初期化
+        // ----------------------------------------
+        const map = L.map('map').setView([35.6812, 139.7671], 11);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // 変数の準備
+        // ----------------------------------------
+        let allMarkers = [];                            // 全マーカーデータを保持
+        let clusterLayer = L.layerGroup().addTo(map);  // クラスタ表示用レイヤー
+        let clusteringEnabled = true;                   // クラスタリングのON/OFF
+
+        // ----------------------------------------
+        // 2点間の距離を計算（ピクセル単位）
+        // ----------------------------------------
+        // 緯度経度をピクセル座標に変換して距離を計算
+        // ズームレベルによって同じ緯度経度でもピクセル距離は変わる
+        function getPixelDistance(latlng1, latlng2) {
+            const p1 = map.latLngToContainerPoint(latlng1);
+            // latLngToContainerPoint() で緯度経度をピクセル座標に変換
+            const p2 = map.latLngToContainerPoint(latlng2);
+            // ユークリッド距離を計算
+            return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+        }
+
+        // ----------------------------------------
+        // クラスタアイコンを作成
+        // ----------------------------------------
+        // マーカー数に応じてサイズと色を変更
+        function createClusterIcon(count) {
+            let size, className;
+
+            if (count < 10) {
+                size = 30;
+                className = 'cluster-small';
+            } else if (count < 50) {
+                size = 40;
+                className = 'cluster-medium';
+            } else {
+                // 50個以上: 大（赤）
+                size = 50;
+                className = 'cluster-large';
+            }
+
+            // L.divIcon() でカスタムアイコンを作成
+            return L.divIcon({
+                html: `<div class="cluster-icon ${className}" style="width:${size}px;height:${size}px;line-height:${size}px;">${count}</div>`,
+                iconSize: [size, size],
+                iconAnchor: [size/2, size/2],  // アイコンの中心を基準点に
+                className: ''
+            });
+        }
+
+        // ----------------------------------------
+        // クラスタリング処理
+        // ----------------------------------------
+        // マーカーを距離に基づいてグループ化
+        function updateClusters() {
+            // 既存のレイヤーをクリア
+            clusterLayer.clearLayers();
+
+            // クラスタリング無効時、または マーカーがない場合
+            if (!clusteringEnabled || allMarkers.length === 0) {
+                // 全マーカーを個別に表示
+                allMarkers.forEach(data => {
+                    L.marker(data.latlng)
+                        .bindPopup(data.popup)
+                        .addTo(clusterLayer);
+                });
+                updateInfo(allMarkers.length, allMarkers.length);
+                return;
+            }
+
+            // クラスタリングのパラメータ
+            const clusterRadius = 60;   // クラスタ化する半径（ピクセル）
+            const clusters = [];        // クラスタの配列
+            const processed = new Set(); // 処理済みマーカーのインデックス
+
+            // ----------------------------------------
+            // クラスタリングアルゴリズム（シンプル版）
+            // ----------------------------------------
+            // 各マーカーを順番に処理し、近くにあるマーカーをグループ化
+            allMarkers.forEach((marker, i) => {
+                // 既に他のクラスタに含まれている場合はスキップ
+                if (processed.has(i)) return;
+
+                // 新しいクラスタを作成
+                const cluster = {
+                    markers: [marker],
+                    indices: [i]
+                };
+
+                // 近くのマーカーを探す
+                allMarkers.forEach((other, j) => {
+                    if (i === j || processed.has(j)) return;
+
+                    // ピクセル距離が閾値以下なら同じクラスタに追加
+                    if (getPixelDistance(marker.latlng, other.latlng) < clusterRadius) {
+                        cluster.markers.push(other);
+                        cluster.indices.push(j);
+                    }
+                });
+
+                // クラスタに含まれるマーカーを処理済みとしてマーク
+                cluster.indices.forEach(idx => processed.add(idx));
+
+                // クラスタの中心座標を計算（平均値）
+                let latSum = 0, lngSum = 0;
+                cluster.markers.forEach(m => {
+                    latSum += m.latlng.lat;
+                    lngSum += m.latlng.lng;
+                });
+                cluster.center = L.latLng(
+                    latSum / cluster.markers.length,
+                    lngSum / cluster.markers.length
+                );
+
+                clusters.push(cluster);
+            });
+
+            // ----------------------------------------
+            // クラスタを描画
+            // ----------------------------------------
+            clusters.forEach(cluster => {
+                if (cluster.markers.length === 1) {
+                    // 単一マーカー: 通常のマーカーとして表示
+                    L.marker(cluster.markers[0].latlng)
+                        .bindPopup(cluster.markers[0].popup)
+                        .addTo(clusterLayer);
+                } else {
+                    // 複数マーカー: クラスタアイコンで表示
+                    const clusterMarker = L.marker(cluster.center, {
+                        icon: createClusterIcon(cluster.markers.length)
+                    }).addTo(clusterLayer);
+
+                    // クラスタクリック時: そのクラスタの範囲にズーム
+                    clusterMarker.on('click', function() {
+                        const bounds = L.latLngBounds(cluster.markers.map(m => m.latlng));
+                        map.fitBounds(bounds.pad(0.2));
+                    });
+
+                    // ツールチップでマーカー数を表示
+                    clusterMarker.bindTooltip(`${cluster.markers.length}個のマーカー`);
+                }
+            });
+
+            updateInfo(allMarkers.length, clusters.length);
+        }
+
+        // ----------------------------------------
+        // 情報パネルを更新
+        // ----------------------------------------
+        function updateInfo(markerCount, clusterCount) {
+            document.getElementById('markerCount').textContent = `マーカー数: ${markerCount}`;
+            document.getElementById('clusterCount').textContent = `クラスタ数: ${clusterCount}`;
+            document.getElementById('clusteringStatus').textContent =
+                `クラスタリング: ${clusteringEnabled ? 'ON' : 'OFF'}`;
+        }
+
+        // ----------------------------------------
+        // ランダムマーカーを追加
+        // ----------------------------------------
+        // 現在の表示範囲内にランダムにマーカーを配置
+        function addRandomMarkers(count) {
+            const center = map.getCenter();
+            const bounds = map.getBounds();
+
+            for (let i = 0; i < count; i++) {
+                // 現在の表示範囲内でランダムな座標を生成
+                const lat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
+                const lng = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
+
+                // マーカーデータを配列に追加
+                allMarkers.push({
+                    latlng: L.latLng(lat, lng),
+                    popup: `マーカー ${allMarkers.length + 1}`
+                });
+            }
+
+            // クラスタを再計算
+            updateClusters();
+        }
+
+        // ----------------------------------------
+        // マーカーをクリア
+        // ----------------------------------------
+        function clearMarkers() {
+            allMarkers = [];
+            updateClusters();
+        }
+
+        // ----------------------------------------
+        // クラスタリングの切り替え
+        // ----------------------------------------
+        function toggleClustering() {
+            clusteringEnabled = !clusteringEnabled;
+            updateClusters();
+        }
+
+        // ----------------------------------------
+        // イベントリスナー
+        // ----------------------------------------
+        // ズームや移動時にクラスタを再計算
+        // ズームレベルが変わるとピクセル距離が変わるため再計算が必要
+        map.on('zoomend moveend', updateClusters);
+
+        // 初期マーカーを追加
+        addRandomMarkers(30);
+
+        // ヒント: 本番環境でのマーカークラスタリング
+        // 1. Leaflet.markercluster プラグインを使用する
+        //    <script src="leaflet.markercluster.js"></script>
+        // 2. L.markerClusterGroup() を使用
+        //    const cluster = L.markerClusterGroup();
+        //    markers.forEach(m => cluster.addLayer(L.marker([m.lat, m.lng])));
+        //    map.addLayer(cluster);
+    </script>
+</body>
+</html>

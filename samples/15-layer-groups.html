@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>15 - レイヤーグループ</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 450px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .controls button {
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            background: white;
+            color: #007bff;
+            transition: all 0.3s;
+        }
+        .controls button:hover {
+            background: #007bff;
+            color: white;
+        }
+        .controls button.active {
+            background: #007bff;
+            color: white;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>15 - レイヤーグループ</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> 複数のレイヤーをグループ化して管理します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>L.layerGroup() で複数のレイヤーをまとめる</li>
+                <li>L.featureGroup() は境界計算などの機能を追加</li>
+                <li>グループ単位で表示/非表示を切り替え</li>
+                <li>addLayer() / removeLayer() でレイヤーを追加/削除</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="controls">
+            <button id="btnRestaurants" class="active" onclick="toggleLayer('restaurants')">レストラン</button>
+            <button id="btnHotels" class="active" onclick="toggleLayer('hotels')">ホテル</button>
+            <button id="btnStations" class="active" onclick="toggleLayer('stations')">駅</button>
+            <button onclick="showAll()">すべて表示</button>
+            <button onclick="hideAll()">すべて非表示</button>
+            <button onclick="fitToRestaurants()">レストランにズーム</button>
+        </div>
+
+        <div class="code-section">
+            <pre>
+// レイヤーグループを作成
+const restaurantsGroup = L.layerGroup();
+const hotelsGroup = L.layerGroup();
+
+// マーカーをグループに追加
+L.marker([35.68, 139.76]).addTo(restaurantsGroup);
+L.marker([35.69, 139.77]).addTo(hotelsGroup);
+
+// グループを地図に追加
+restaurantsGroup.addTo(map);
+hotelsGroup.addTo(map);
+
+// グループの表示/非表示
+if (map.hasLayer(restaurantsGroup)) {
+    map.removeLayer(restaurantsGroup);
+} else {
+    map.addLayer(restaurantsGroup);
+}
+
+// FeatureGroupで境界を取得
+const featureGroup = L.featureGroup([marker1, marker2]);
+map.fitBounds(featureGroup.getBounds());
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // レイヤーグループのサンプル
+        // 複数のマーカーやレイヤーをまとめて管理
+        // ========================================
+
+        // 地図を初期化
+        const map = L.map('map').setView([35.6812, 139.7671], 13);
+
+        // タイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // カスタムアイコンの作成関数
+        // ----------------------------------------
+        function createIcon(emoji) {
+            return L.divIcon({
+                className: '',
+                html: `<div style="font-size: 24px;">${emoji}</div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -10]
+            });
+        }
+
+        // ----------------------------------------
+        // レイヤーグループの作成
+        // ----------------------------------------
+        // L.layerGroup() - 単純にレイヤーをまとめる
+        // L.featureGroup() - layerGroup + 境界計算などの機能
+        // featureGroup は getBounds() でグループ全体の範囲を取得できる
+        const restaurantsGroup = L.featureGroup();
+        const hotelsGroup = L.featureGroup();
+        const stationsGroup = L.featureGroup();
+
+        // ----------------------------------------
+        // データの定義とマーカーの追加
+        // ----------------------------------------
+        // カテゴリごとにデータを配列で管理
+        const restaurants = [
+            { name: 'イタリアンレストラン', lat: 35.6830, lng: 139.7700 },
+            { name: '和食レストラン', lat: 35.6780, lng: 139.7650 },
+            { name: 'フレンチレストラン', lat: 35.6850, lng: 139.7600 },
+            { name: '中華レストラン', lat: 35.6750, lng: 139.7720 }
+        ];
+
+        // マーカーを作成してグループに追加
+        // .addTo(restaurantsGroup) で地図ではなくグループに追加
+        restaurants.forEach(r => {
+            L.marker([r.lat, r.lng], { icon: createIcon('🍜') })
+                .bindPopup(`<b>${r.name}</b>`)
+                .addTo(restaurantsGroup);  // 地図ではなくグループに追加
+        });
+
+        // ホテルデータ
+        const hotels = [
+            { name: 'グランドホテル', lat: 35.6870, lng: 139.7680 },
+            { name: 'ビジネスホテル', lat: 35.6800, lng: 139.7580 },
+            { name: 'シティホテル', lat: 35.6760, lng: 139.7750 }
+        ];
+
+        hotels.forEach(h => {
+            L.marker([h.lat, h.lng], { icon: createIcon('🏨') })
+                .bindPopup(`<b>${h.name}</b>`)
+                .addTo(hotelsGroup);
+        });
+
+        // 駅データ
+        const stations = [
+            { name: '東京駅', lat: 35.6812, lng: 139.7671 },
+            { name: '有楽町駅', lat: 35.6750, lng: 139.7630 },
+            { name: '神田駅', lat: 35.6917, lng: 139.7703 }
+        ];
+
+        stations.forEach(s => {
+            L.marker([s.lat, s.lng], { icon: createIcon('🚉') })
+                .bindPopup(`<b>${s.name}</b>`)
+                .addTo(stationsGroup);
+        });
+
+        // ----------------------------------------
+        // グループを地図に追加
+        // ----------------------------------------
+        // グループを地図に追加すると、グループ内のすべてのレイヤーが表示される
+        restaurantsGroup.addTo(map);
+        hotelsGroup.addTo(map);
+        stationsGroup.addTo(map);
+
+        // レイヤーの管理用オブジェクト（名前でアクセスできるように）
+        const layers = {
+            restaurants: restaurantsGroup,
+            hotels: hotelsGroup,
+            stations: stationsGroup
+        };
+
+        // ----------------------------------------
+        // レイヤーの表示/非表示を切り替え
+        // ----------------------------------------
+        function toggleLayer(name) {
+            const layer = layers[name];
+            const btn = document.getElementById('btn' + name.charAt(0).toUpperCase() + name.slice(1));
+
+            // map.hasLayer() でレイヤーが地図に追加されているか確認
+            if (map.hasLayer(layer)) {
+                // map.removeLayer() でレイヤーを削除（非表示）
+                map.removeLayer(layer);
+                btn.classList.remove('active');
+            } else {
+                // map.addLayer() でレイヤーを追加（表示）
+                map.addLayer(layer);
+                btn.classList.add('active');
+            }
+        }
+
+        // すべて表示
+        function showAll() {
+            Object.keys(layers).forEach(name => {
+                if (!map.hasLayer(layers[name])) {
+                    map.addLayer(layers[name]);
+                }
+                document.getElementById('btn' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+            });
+        }
+
+        // すべて非表示
+        function hideAll() {
+            Object.keys(layers).forEach(name => {
+                if (map.hasLayer(layers[name])) {
+                    map.removeLayer(layers[name]);
+                }
+                document.getElementById('btn' + name.charAt(0).toUpperCase() + name.slice(1)).classList.remove('active');
+            });
+        }
+
+        // ----------------------------------------
+        // FeatureGroup の機能: getBounds()
+        // ----------------------------------------
+        // グループ内のすべてのマーカーを含む範囲を取得
+        function fitToRestaurants() {
+            if (map.hasLayer(restaurantsGroup)) {
+                // getBounds() でグループの境界を取得
+                // pad(0.2) で余白を20%追加
+                map.fitBounds(restaurantsGroup.getBounds().pad(0.2));
+            } else {
+                alert('レストランレイヤーを表示してください');
+            }
+        }
+
+        // ヒント: LayerGroup と FeatureGroup の違い
+        // LayerGroup: 単純にレイヤーをまとめる
+        // FeatureGroup: getBounds(), setStyle(), bindPopup() などの追加機能あり
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# LaTeX auxiliary files
+*.aux
+*.log
+*.out
+*.toc
+*.idx
+*.ilg
+*.ind
+
+# Private instruction files
+GUIDE.md
+
+# Node.js
+node_modules/

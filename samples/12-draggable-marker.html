@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12 - ドラッグ可能なマーカー</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 450px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .info-panel {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        .info-panel h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .coord-display {
+            font-family: monospace;
+            font-size: 16px;
+            color: #007bff;
+        }
+        .coord-copy {
+            margin-top: 10px;
+        }
+        .coord-copy input {
+            width: 300px;
+            padding: 8px;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .coord-copy button {
+            padding: 8px 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .coord-copy button:hover {
+            background: #218838;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>12 - ドラッグ可能なマーカー</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> ユーザーがドラッグして位置を変更できるマーカーを作成します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>draggable: true オプションでドラッグを有効化</li>
+                <li>dragstart, drag, dragend イベントで位置変更を検知</li>
+                <li>getLatLng() で現在の座標を取得</li>
+            </ul>
+            <p><strong>操作:</strong> マーカーをドラッグして位置を変更してください。</p>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="info-panel">
+            <h3>マーカーの位置</h3>
+            <p class="coord-display">
+                緯度: <span id="lat">35.681200</span><br>
+                経度: <span id="lng">139.767100</span>
+            </p>
+            <div class="coord-copy">
+                <input type="text" id="coordInput" value="35.681200, 139.767100" readonly>
+                <button onclick="copyCoords()">コピー</button>
+            </div>
+        </div>
+
+        <div class="code-section">
+            <pre>
+// ドラッグ可能なマーカーを作成
+const marker = L.marker([35.6812, 139.7671], {
+    draggable: true
+}).addTo(map);
+
+// ドラッグ開始
+marker.on('dragstart', function(e) {
+    console.log('ドラッグ開始');
+});
+
+// ドラッグ中
+marker.on('drag', function(e) {
+    const pos = marker.getLatLng();
+    console.log('移動中:', pos.lat, pos.lng);
+});
+
+// ドラッグ終了
+marker.on('dragend', function(e) {
+    const pos = marker.getLatLng();
+    console.log('最終位置:', pos.lat, pos.lng);
+});
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // ドラッグ可能なマーカーのサンプル
+        // ユーザーが位置を自由に変更できるマーカー
+        // ========================================
+
+        // 地図を初期化
+        const map = L.map('map').setView([35.6812, 139.7671], 15);
+
+        // タイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // ドラッグ可能なマーカーを作成
+        // ----------------------------------------
+        // draggable: true を指定するとドラッグ可能になる
+        const marker = L.marker([35.6812, 139.7671], {
+            draggable: true  // ドラッグを有効化
+        }).addTo(map);
+
+        marker.bindPopup('ドラッグして位置を変更できます').openPopup();
+
+        // ----------------------------------------
+        // 座標表示を更新する関数
+        // ----------------------------------------
+        function updateCoords(latlng) {
+            // toFixed(6) で小数点以下6桁に丸める
+            const lat = latlng.lat.toFixed(6);
+            const lng = latlng.lng.toFixed(6);
+            // HTMLの要素を更新
+            document.getElementById('lat').textContent = lat;
+            document.getElementById('lng').textContent = lng;
+            document.getElementById('coordInput').value = `${lat}, ${lng}`;
+        }
+
+        // ----------------------------------------
+        // ドラッグイベントの処理
+        // ----------------------------------------
+
+        // ドラッグ開始時のイベント
+        marker.on('dragstart', function(e) {
+            // ドラッグ中はポップアップを閉じる
+            marker.closePopup();
+        });
+
+        // ドラッグ中（移動中）のイベント - リアルタイムで座標を更新
+        marker.on('drag', function(e) {
+            // marker.getLatLng() で現在の座標を取得
+            updateCoords(marker.getLatLng());
+        });
+
+        // ドラッグ終了時のイベント
+        marker.on('dragend', function(e) {
+            const pos = marker.getLatLng();
+            updateCoords(pos);
+            // ポップアップの内容を更新して開く
+            marker.setPopupContent(
+                `位置が更新されました<br>緯度: ${pos.lat.toFixed(6)}<br>経度: ${pos.lng.toFixed(6)}`
+            ).openPopup();
+        });
+
+        // ----------------------------------------
+        // 座標をクリップボードにコピー
+        // ----------------------------------------
+        function copyCoords() {
+            const input = document.getElementById('coordInput');
+            input.select();  // テキストを選択
+            document.execCommand('copy');  // コピー実行
+            alert('座標をコピーしました: ' + input.value);
+        }
+
+        // 別の固定マーカー（参照用・ドラッグ不可）
+        L.marker([35.6830, 139.7700])
+            .addTo(map)
+            .bindPopup('参照点（移動不可）');
+
+        // ----------------------------------------
+        // クリックでマーカーを移動
+        // ----------------------------------------
+        // marker.setLatLng() でマーカーの位置を変更できる
+        map.on('click', function(e) {
+            marker.setLatLng(e.latlng);  // クリック位置に移動
+            updateCoords(e.latlng);
+            marker.setPopupContent(
+                `クリックで移動しました<br>緯度: ${e.latlng.lat.toFixed(6)}<br>経度: ${e.latlng.lng.toFixed(6)}`
+            ).openPopup();
+        });
+
+        // ヒント: この機能は「場所を選択させる」UIによく使われる
+        // 例: 配送先の位置指定、お店の位置登録など
+    </script>
+</body>
+</html>

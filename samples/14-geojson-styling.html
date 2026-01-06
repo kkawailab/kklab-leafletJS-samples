@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>14 - GeoJSONのスタイリング</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .legend {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+        }
+        .legend h4 {
+            margin-bottom: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>14 - GeoJSONのスタイリング</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> GeoJSONデータのプロパティに基づいて動的にスタイルを設定します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>style関数でフィーチャーごとにスタイルを返す</li>
+                <li>properties の値に基づいて色や太さを変更</li>
+                <li>マウスオーバー時のインタラクティブなスタイル変更</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="legend">
+            <h4>人口密度（架空データ）</h4>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #800026;"></div>
+                <span>10,000人/km² 以上</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #BD0026;"></div>
+                <span>8,000 - 10,000人/km²</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #E31A1C;"></div>
+                <span>6,000 - 8,000人/km²</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FC4E2A;"></div>
+                <span>4,000 - 6,000人/km²</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FD8D3C;"></div>
+                <span>2,000 - 4,000人/km²</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FED976;"></div>
+                <span>2,000人/km² 未満</span>
+            </div>
+        </div>
+
+        <div class="code-section">
+            <pre>
+// 人口密度に基づいて色を返す関数
+function getColor(density) {
+    return density > 10000 ? '#800026' :
+           density > 8000  ? '#BD0026' :
+           density > 6000  ? '#E31A1C' :
+           density > 4000  ? '#FC4E2A' :
+           density > 2000  ? '#FD8D3C' :
+                             '#FED976';
+}
+
+// スタイル関数
+function style(feature) {
+    return {
+        fillColor: getColor(feature.properties.density),
+        weight: 2,
+        opacity: 1,
+        color: 'white',
+        fillOpacity: 0.7
+    };
+}
+
+L.geoJSON(data, { style: style }).addTo(map);
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // GeoJSONのスタイリングサンプル
+        // データの値に基づいて動的にスタイルを変更
+        // コロプレス（階級区分図）マップの基礎
+        // ========================================
+
+        // 地図を初期化
+        const map = L.map('map').setView([35.6700, 139.7500], 12);
+
+        // タイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // 架空の区データ（東京の区をイメージ）
+        // ----------------------------------------
+        // 各エリアに人口密度と人口のデータを持たせている
+        const areasData = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "エリアA",
+                        "density": 12000,
+                        "population": 350000
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [139.72, 35.70], [139.75, 35.70], [139.75, 35.67],
+                            [139.72, 35.67], [139.72, 35.70]
+                        ]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "エリアB",
+                        "density": 8500,
+                        "population": 280000
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [139.75, 35.70], [139.78, 35.70], [139.78, 35.67],
+                            [139.75, 35.67], [139.75, 35.70]
+                        ]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "エリアC",
+                        "density": 6500,
+                        "population": 220000
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [139.78, 35.70], [139.81, 35.70], [139.81, 35.67],
+                            [139.78, 35.67], [139.78, 35.70]
+                        ]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "エリアD",
+                        "density": 4500,
+                        "population": 180000
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [139.72, 35.67], [139.75, 35.67], [139.75, 35.64],
+                            [139.72, 35.64], [139.72, 35.67]
+                        ]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "エリアE",
+                        "density": 3000,
+                        "population": 150000
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [139.75, 35.67], [139.78, 35.67], [139.78, 35.64],
+                            [139.75, 35.64], [139.75, 35.67]
+                        ]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "エリアF",
+                        "density": 1500,
+                        "population": 100000
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [139.78, 35.67], [139.81, 35.67], [139.81, 35.64],
+                            [139.78, 35.64], [139.78, 35.67]
+                        ]]
+                    }
+                }
+            ]
+        };
+
+        // ----------------------------------------
+        // 値に基づいて色を返す関数
+        // ----------------------------------------
+        // 人口密度の値によって段階的に色を変える
+        // 三項演算子を連鎖させて条件分岐
+        function getColor(density) {
+            return density > 10000 ? '#800026' :  // 最も濃い赤
+                   density > 8000  ? '#BD0026' :
+                   density > 6000  ? '#E31A1C' :
+                   density > 4000  ? '#FC4E2A' :
+                   density > 2000  ? '#FD8D3C' :
+                                     '#FED976';   // 最も薄い黄色
+        }
+
+        // ----------------------------------------
+        // スタイル関数
+        // ----------------------------------------
+        // 各フィーチャーのスタイルを返す
+        // feature.properties からデータを取得して色を決定
+        function style(feature) {
+            return {
+                fillColor: getColor(feature.properties.density),  // 人口密度で色を決定
+                weight: 2,           // 境界線の太さ
+                opacity: 1,          // 境界線の不透明度
+                color: 'white',      // 境界線の色
+                dashArray: '3',      // 破線パターン
+                fillOpacity: 0.7     // 塗りつぶしの不透明度
+            };
+        }
+
+        // ----------------------------------------
+        // マウスオーバー時のハイライト処理
+        // ----------------------------------------
+        function highlightFeature(e) {
+            const layer = e.target;
+            // setStyle() でスタイルを変更
+            layer.setStyle({
+                weight: 4,           // 境界線を太く
+                color: '#666',       // 境界線を灰色に
+                dashArray: '',       // 実線に
+                fillOpacity: 0.9     // より不透明に
+            });
+            // bringToFront() で最前面に移動
+            layer.bringToFront();
+            // 情報パネルを更新
+            info.update(layer.feature.properties);
+        }
+
+        // ----------------------------------------
+        // マウスアウト時のハイライト解除
+        // ----------------------------------------
+        function resetHighlight(e) {
+            // resetStyle() で元のスタイルに戻す
+            geojsonLayer.resetStyle(e.target);
+            info.update();
+        }
+
+        // ----------------------------------------
+        // クリック時にそのエリアにズーム
+        // ----------------------------------------
+        function zoomToFeature(e) {
+            // getBounds() でレイヤーの境界を取得
+            // fitBounds() でその範囲にズーム
+            map.fitBounds(e.target.getBounds());
+        }
+
+        // ----------------------------------------
+        // 各フィーチャーにイベントを設定
+        // ----------------------------------------
+        function onEachFeature(feature, layer) {
+            // layer.on() で複数のイベントを一度に登録
+            layer.on({
+                mouseover: highlightFeature,  // マウスオーバー
+                mouseout: resetHighlight,     // マウスアウト
+                click: zoomToFeature          // クリック
+            });
+        }
+
+        // GeoJSONレイヤーを追加（変数に保存してresetStyleで使う）
+        const geojsonLayer = L.geoJSON(areasData, {
+            style: style,
+            onEachFeature: onEachFeature
+        }).addTo(map);
+
+        // ----------------------------------------
+        // カスタム情報パネル（コントロール）
+        // ----------------------------------------
+        // L.control を拡張して独自のUIを作成
+        const info = L.control();
+
+        // onAdd: コントロールが地図に追加されたときに呼ばれる
+        info.onAdd = function(map) {
+            // L.DomUtil.create() でDOM要素を作成
+            this._div = L.DomUtil.create('div', 'info');
+            this._div.style.cssText = 'padding: 10px; background: white; border-radius: 5px; box-shadow: 0 1px 5px rgba(0,0,0,0.2);';
+            this.update();
+            return this._div;
+        };
+
+        // update: パネルの内容を更新
+        info.update = function(props) {
+            // props があればエリア情報を表示、なければ説明を表示
+            this._div.innerHTML = '<h4>人口密度情報</h4>' + (props ?
+                '<b>' + props.name + '</b><br>' +
+                props.density.toLocaleString() + ' 人/km²<br>' +
+                '人口: ' + props.population.toLocaleString() + '人'
+                : 'エリアにマウスを乗せてください');
+        };
+
+        // コントロールを地図に追加
+        info.addTo(map);
+    </script>
+</body>
+</html>

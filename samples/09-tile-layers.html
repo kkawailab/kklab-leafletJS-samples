@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>09 - 異なるタイルレイヤー</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .layer-buttons {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .layer-buttons button {
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            background: white;
+            color: #007bff;
+            transition: all 0.3s;
+        }
+        .layer-buttons button:hover,
+        .layer-buttons button.active {
+            background: #007bff;
+            color: white;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>09 - 異なるタイルレイヤー</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> 様々なタイルプロバイダーの地図を切り替えて表示します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>OpenStreetMap以外にも多くのタイルプロバイダーがある</li>
+                <li>用途に応じて適切な地図スタイルを選択</li>
+                <li>attribution（著作権表示）は必ず正しく設定</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="layer-buttons">
+            <button class="active" onclick="changeLayer('osm')">OpenStreetMap</button>
+            <button onclick="changeLayer('osmHot')">OSM HOT</button>
+            <button onclick="changeLayer('cartoDB')">CartoDB Positron</button>
+            <button onclick="changeLayer('cartoDBDark')">CartoDB Dark</button>
+            <button onclick="changeLayer('esriWorld')">Esri World</button>
+            <button onclick="changeLayer('openTopo')">OpenTopoMap</button>
+        </div>
+
+        <div class="code-section">
+            <pre>
+// OpenStreetMap（標準）
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&amp;copy; &lt;a href="https://www.openstreetmap.org/copyright"&gt;OpenStreetMap&lt;/a&gt; contributors'
+});
+
+// CartoDB Positron（明るいデザイン）
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&amp;copy; &lt;a href="https://www.openstreetmap.org/copyright"&gt;OpenStreetMap&lt;/a&gt; contributors &amp;copy; &lt;a href="https://carto.com/attributions"&gt;CARTO&lt;/a&gt;'
+});
+
+// CartoDB Dark（ダークテーマ）
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&amp;copy; &lt;a href="https://www.openstreetmap.org/copyright"&gt;OpenStreetMap&lt;/a&gt; contributors &amp;copy; &lt;a href="https://carto.com/attributions"&gt;CARTO&lt;/a&gt;'
+});
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // 異なるタイルレイヤーのサンプル
+        // 様々な地図プロバイダーの地図を切り替える
+        // ========================================
+
+        // 地図を初期化
+        const map = L.map('map').setView([35.6812, 139.7671], 12);
+
+        // ----------------------------------------
+        // 利用可能なタイルレイヤーの定義
+        // ----------------------------------------
+        // 用途に応じて適切な地図スタイルを選択できる
+        // 注意: 各プロバイダーの利用規約を確認すること
+        const tileLayers = {
+            // OpenStreetMap 標準 - 最も一般的な地図
+            osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }),
+
+            // OSM HOT - 人道支援向けのスタイル（見やすい）
+            osmHot: L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/">HOT</a>'
+            }),
+
+            // CartoDB Positron - 明るくシンプルなデザイン（データ可視化に最適）
+            cartoDB: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            }),
+
+            // CartoDB Dark - ダークテーマ（夜間モードや光るデータに最適）
+            cartoDBDark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            }),
+
+            // Esri World Imagery - 衛星写真
+            esriWorld: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            }),
+
+            // OpenTopoMap - 地形図スタイル（登山やアウトドアに最適）
+            openTopo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
+            })
+        };
+
+        // 初期レイヤーを追加
+        let currentLayer = tileLayers.osm;
+        currentLayer.addTo(map);
+
+        // マーカーを追加
+        L.marker([35.6812, 139.7671]).addTo(map).bindPopup('東京駅');
+
+        // ----------------------------------------
+        // レイヤー切り替え関数
+        // ----------------------------------------
+        function changeLayer(layerName) {
+            // map.removeLayer() で現在のレイヤーを削除
+            // タイルレイヤーは一度に1つしか表示できないため、
+            // 新しいレイヤーを追加する前に古いものを削除
+            map.removeLayer(currentLayer);
+
+            // 新しいレイヤーを追加
+            currentLayer = tileLayers[layerName];
+            currentLayer.addTo(map);
+
+            // ボタンのアクティブ状態を更新（UI用）
+            document.querySelectorAll('.layer-buttons button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // ヒント: L.control.layers を使うと、より簡単にレイヤー切り替えUIを作れる
+        // 詳しくは「16-layer-control.html」を参照
+    </script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18 - 画像オーバーレイ</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .controls label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .controls input[type="range"] {
+            width: 150px;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>18 - 画像オーバーレイ</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> 地図上に画像やSVGをオーバーレイとして表示します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>L.imageOverlay() で画像を地図上に配置</li>
+                <li>bounds で表示範囲を指定</li>
+                <li>opacity で透明度を調整</li>
+                <li>L.svgOverlay() でSVGを表示</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="controls">
+            <label>
+                オーバーレイ透明度:
+                <input type="range" id="opacitySlider" min="0" max="100" value="70" oninput="changeOpacity(this.value)">
+                <span id="opacityValue">70%</span>
+            </label>
+            <button onclick="toggleOverlay()">オーバーレイ表示切替</button>
+        </div>
+
+        <div class="code-section">
+            <pre>
+// 画像オーバーレイを作成
+const imageUrl = 'path/to/image.png';
+const imageBounds = [
+    [35.70, 139.74],  // 南西の角
+    [35.72, 139.78]   // 北東の角
+];
+
+const imageOverlay = L.imageOverlay(imageUrl, imageBounds, {
+    opacity: 0.7,
+    interactive: true
+}).addTo(map);
+
+// 透明度を変更
+imageOverlay.setOpacity(0.5);
+
+// SVGオーバーレイ
+const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+svgElement.innerHTML = '&lt;circle cx="50" cy="50" r="40" fill="red"/&gt;';
+L.svgOverlay(svgElement, bounds).addTo(map);
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // 画像オーバーレイのサンプル
+        // 地図上に画像やSVGを重ねて表示
+        // 用途: フロアプラン、歴史的地図、航空写真など
+        // ========================================
+
+        // 地図を初期化
+        const map = L.map('map').setView([35.6850, 139.7550], 14);
+
+        // タイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // デモ用のSVG画像を作成
+        // ----------------------------------------
+        // 実際のプロジェクトでは画像URLを直接指定する
+        const svgContent = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+                <defs>
+                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:0.8" />
+                        <stop offset="100%" style="stop-color:#4ecdc4;stop-opacity:0.8" />
+                    </linearGradient>
+                </defs>
+                <rect width="400" height="300" fill="url(#grad1)" rx="10"/>
+                <text x="200" y="140" font-family="Arial" font-size="24" fill="white" text-anchor="middle">画像オーバーレイ</text>
+                <text x="200" y="170" font-family="Arial" font-size="14" fill="white" text-anchor="middle">このエリアに画像を表示</text>
+                <rect x="50" y="200" width="300" height="60" fill="rgba(255,255,255,0.3)" rx="5"/>
+                <text x="200" y="240" font-family="Arial" font-size="12" fill="white" text-anchor="middle">例: 建物のフロアプラン、歴史的地図など</text>
+            </svg>
+        `;
+
+        // SVGをData URLに変換（Base64エンコード）
+        const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgContent)));
+
+        // ----------------------------------------
+        // L.imageOverlay() で画像オーバーレイを追加
+        // ----------------------------------------
+        // 第1引数: 画像のURL（またはData URL）
+        // 第2引数: 表示範囲 [[南西座標], [北東座標]]
+        const imageBounds = [
+            [35.6750, 139.7450],  // 南西（左下）
+            [35.6900, 139.7650]   // 北東（右上）
+        ];
+
+        const imageOverlay = L.imageOverlay(svgDataUrl, imageBounds, {
+            opacity: 0.7,       // 透明度（0〜1）
+            interactive: true,  // クリック可能にする
+            zIndex: 100         // 重ね順
+        }).addTo(map);
+
+        imageOverlay.bindPopup('これは画像オーバーレイです。<br>クリックでポップアップを表示。');
+
+        // オーバーレイの境界を表示
+        const boundsRect = L.rectangle(imageBounds, {
+            color: '#ff7800',
+            weight: 2,
+            fill: false,
+            dashArray: '5, 5'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // L.svgOverlay() でSVGオーバーレイを追加
+        // ----------------------------------------
+        // DOM要素として直接SVGを指定できる
+        const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svgElement.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svgElement.setAttribute('viewBox', '0 0 100 100');
+        svgElement.innerHTML = `
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#3388ff" stroke-width="3"/>
+            <circle cx="50" cy="50" r="35" fill="none" stroke="#3388ff" stroke-width="2" stroke-dasharray="10,5"/>
+            <circle cx="50" cy="50" r="5" fill="#3388ff"/>
+            <line x1="50" y1="5" x2="50" y2="20" stroke="#3388ff" stroke-width="2"/>
+            <line x1="50" y1="80" x2="50" y2="95" stroke="#3388ff" stroke-width="2"/>
+            <line x1="5" y1="50" x2="20" y2="50" stroke="#3388ff" stroke-width="2"/>
+            <line x1="80" y1="50" x2="95" y2="50" stroke="#3388ff" stroke-width="2"/>
+        `;
+
+        const svgBounds = [
+            [35.6920, 139.7680],
+            [35.6980, 139.7780]
+        ];
+
+        const svgOverlay = L.svgOverlay(svgElement, svgBounds, {
+            opacity: 0.8,
+            interactive: true
+        }).addTo(map);
+
+        svgOverlay.bindPopup('SVGオーバーレイ（ターゲットマーク）');
+
+        // ----------------------------------------
+        // オーバーレイの操作メソッド
+        // ----------------------------------------
+
+        // 透明度を変更: setOpacity(value)
+        function changeOpacity(value) {
+            const opacity = value / 100;
+            imageOverlay.setOpacity(opacity);  // 0〜1の値
+            document.getElementById('opacityValue').textContent = value + '%';
+        }
+
+        // オーバーレイの表示切替
+        let overlayVisible = true;
+        function toggleOverlay() {
+            if (overlayVisible) {
+                // removeLayer() で非表示
+                map.removeLayer(imageOverlay);
+                map.removeLayer(boundsRect);
+            } else {
+                // addTo() で再表示
+                imageOverlay.addTo(map);
+                boundsRect.addTo(map);
+            }
+            overlayVisible = !overlayVisible;
+        }
+
+        // 画像オーバーレイの範囲にフィット
+        map.fitBounds(imageBounds, { padding: [50, 50] });
+
+        // ヒント: 実際のプロジェクトでの使用例
+        // - 建物のフロアプラン
+        // - 歴史的な地図を現代の地図と重ねる
+        // - イベント会場のマップ
+        // - スポーツフィールドのレイアウト
+    </script>
+</body>
+</html>

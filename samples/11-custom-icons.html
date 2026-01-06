@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11 - カスタムマーカーアイコン</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        /* カスタムアイコン用CSS（DivIcon用） */
+        .custom-div-icon {
+            background: #007bff;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .emoji-icon {
+            font-size: 24px;
+            text-align: center;
+            line-height: 30px;
+        }
+        .numbered-icon {
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>11 - カスタムマーカーアイコン</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> デフォルトのマーカーを独自のアイコンに変更します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>L.icon() で画像ベースのアイコンを作成</li>
+                <li>L.divIcon() でHTMLベースのアイコンを作成</li>
+                <li>iconSize, iconAnchor, popupAnchor でアイコンの配置を調整</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="code-section">
+            <pre>
+// 画像ベースのカスタムアイコン
+const customIcon = L.icon({
+    iconUrl: 'path/to/icon.png',
+    iconSize: [32, 32],      // アイコンサイズ
+    iconAnchor: [16, 32],    // アイコンの基準点
+    popupAnchor: [0, -32]    // ポップアップの位置
+});
+
+// HTMLベースのDivIcon
+const divIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: '&lt;div class="emoji-icon"&gt;🏪&lt;/div&gt;',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+});
+
+// アイコンを使用
+L.marker([35.68, 139.76], { icon: customIcon }).addTo(map);
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // カスタムマーカーアイコンのサンプル
+        // デフォルトのピンアイコンを独自のアイコンに変更
+        // ========================================
+
+        // 地図を初期化
+        const map = L.map('map').setView([35.6812, 139.7671], 14);
+
+        // タイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // デフォルトマーカー（比較用）
+        // ----------------------------------------
+        L.marker([35.6812, 139.7671])
+            .addTo(map)
+            .bindPopup('デフォルトマーカー');
+
+        // ----------------------------------------
+        // L.divIcon() - HTMLベースのカスタムアイコン
+        // ----------------------------------------
+        // 絵文字を使った駅アイコン
+        // className: '' にすると、デフォルトのスタイルを無効化
+        const stationIcon = L.divIcon({
+            className: '',        // デフォルトのスタイルを無効化
+            html: '<div class="emoji-icon">🚉</div>',  // 表示するHTML
+            iconSize: [30, 30],   // アイコンのサイズ [幅, 高さ]
+            iconAnchor: [15, 15], // アイコンの基準点（中心に配置）
+            popupAnchor: [0, -10] // ポップアップの位置（アイコンからのオフセット）
+        });
+
+        L.marker([35.6850, 139.7700], { icon: stationIcon })
+            .addTo(map)
+            .bindPopup('駅アイコン（絵文字）');
+
+        // レストランアイコン
+        const restaurantIcon = L.divIcon({
+            className: '',
+            html: '<div class="emoji-icon">🍜</div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+            popupAnchor: [0, -10]
+        });
+
+        L.marker([35.6780, 139.7650], { icon: restaurantIcon })
+            .addTo(map)
+            .bindPopup('レストラン');
+
+        // ホテルアイコン
+        const hotelIcon = L.divIcon({
+            className: '',
+            html: '<div class="emoji-icon">🏨</div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+            popupAnchor: [0, -10]
+        });
+
+        L.marker([35.6830, 139.7620], { icon: hotelIcon })
+            .addTo(map)
+            .bindPopup('ホテル');
+
+        // ----------------------------------------
+        // 動的にアイコンを生成する関数
+        // ----------------------------------------
+        // 番号付きアイコンを作成する関数
+        // 関数化することで、同じスタイルのアイコンを簡単に量産できる
+        function createNumberedIcon(number) {
+            return L.divIcon({
+                className: '',
+                html: `<div class="numbered-icon">${number}</div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -15]
+            });
+        }
+
+        // 番号付きマーカーを配置
+        const numberedLocations = [
+            { lat: 35.6760, lng: 139.7700, name: 'スポット1' },
+            { lat: 35.6800, lng: 139.7580, name: 'スポット2' },
+            { lat: 35.6870, lng: 139.7650, name: 'スポット3' }
+        ];
+
+        // forEach の第2引数 index で配列のインデックスを取得
+        numberedLocations.forEach((loc, index) => {
+            L.marker([loc.lat, loc.lng], { icon: createNumberedIcon(index + 1) })
+                .addTo(map)
+                .bindPopup(loc.name);
+        });
+
+        // ----------------------------------------
+        // インラインスタイルでカスタム色の丸アイコン
+        // ----------------------------------------
+        // CSSクラスを使わず、直接スタイルを指定する方法
+        const blueCircleIcon = L.divIcon({
+            className: '',
+            html: '<div style="background: #007bff; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+            popupAnchor: [0, -10]
+        });
+
+        L.marker([35.6750, 139.7550], { icon: blueCircleIcon })
+            .addTo(map)
+            .bindPopup('カスタム色の丸アイコン');
+
+        // ----------------------------------------
+        // SVGを使ったアイコン
+        // ----------------------------------------
+        // SVGならベクターなので、拡大してもきれいに表示される
+        const svgIcon = L.divIcon({
+            className: '',
+            html: `<svg width="30" height="30" viewBox="0 0 30 30">
+                <circle cx="15" cy="15" r="12" fill="#28a745" stroke="white" stroke-width="3"/>
+                <text x="15" y="20" text-anchor="middle" fill="white" font-size="14" font-weight="bold">P</text>
+            </svg>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+            popupAnchor: [0, -15]
+        });
+
+        L.marker([35.6890, 139.7700], { icon: svgIcon })
+            .addTo(map)
+            .bindPopup('駐車場（SVGアイコン）');
+
+        // ヒント: 画像ファイルを使う場合は L.icon() を使用
+        // const customIcon = L.icon({
+        //     iconUrl: 'path/to/icon.png',
+        //     iconSize: [32, 32],
+        //     iconAnchor: [16, 32],
+        //     popupAnchor: [0, -32]
+        // });
+    </script>
+</body>
+</html>

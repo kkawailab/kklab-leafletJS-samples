@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06 - ポリゴンを描画</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>06 - ポリゴンを描画</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> 地図上に多角形（ポリゴン）と矩形（四角形）を描画します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>L.polygon() は座標の配列から多角形を作成</li>
+                <li>L.rectangle() は対角の2点から矩形を作成</li>
+                <li>穴あきポリゴンも作成可能（配列のネスト）</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="code-section">
+            <pre>
+// 三角形のポリゴン
+const triangle = L.polygon([
+    [35.69, 139.70],
+    [35.68, 139.72],
+    [35.67, 139.70]
+], {
+    color: 'purple',
+    fillOpacity: 0.4
+}).addTo(map);
+
+// 矩形
+const rectangle = L.rectangle([
+    [35.66, 139.74],
+    [35.68, 139.76]
+], {
+    color: 'orange',
+    weight: 2
+}).addTo(map);
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // ポリゴン（多角形）と矩形（四角形）のサンプル
+        // ========================================
+
+        // 地図を初期化
+        const map = L.map('map').setView([35.6750, 139.7300], 13);
+
+        // タイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // L.polygon() - 多角形を描画
+        // ----------------------------------------
+        // 座標の配列を渡して多角形を作成
+        // 最初と最後の点は自動的に結ばれる
+        // 三角形の例（3つの頂点を指定）
+        const triangle = L.polygon([
+            [35.69, 139.70],   // 頂点1
+            [35.68, 139.72],   // 頂点2
+            [35.67, 139.70]    // 頂点3
+        ], {
+            color: 'purple',       // 線の色
+            fillColor: '#9370DB',  // 塗りつぶしの色
+            fillOpacity: 0.4       // 塗りつぶしの透明度
+        }).addTo(map).bindPopup('三角形のポリゴン');
+
+        // ----------------------------------------
+        // L.rectangle() - 矩形（四角形）を描画
+        // ----------------------------------------
+        // 対角の2点を指定するだけで矩形を作成できる
+        // [[南西の座標], [北東の座標]] の形式
+        const rectangle = L.rectangle([
+            [35.66, 139.74],   // 南西（左下）の座標
+            [35.68, 139.76]    // 北東（右上）の座標
+        ], {
+            color: 'orange',
+            fillColor: '#FFA500',
+            fillOpacity: 0.3,
+            weight: 2              // 線の太さ（ピクセル）
+        }).addTo(map).bindPopup('矩形（Rectangle）');
+
+        // 五角形のポリゴン（5つの頂点を指定）
+        const pentagon = L.polygon([
+            [35.695, 139.74],
+            [35.690, 139.76],
+            [35.680, 139.755],
+            [35.680, 139.725],
+            [35.690, 139.72]
+        ], {
+            color: 'green',
+            fillColor: '#90EE90',
+            fillOpacity: 0.4
+        }).addTo(map).bindPopup('五角形のポリゴン');
+
+        // ----------------------------------------
+        // 穴あきポリゴン（ドーナツ型）
+        // ----------------------------------------
+        // 配列をネスト（入れ子に）することで穴を開けられる
+        // 最初の配列が外側の形状、2番目以降が穴の形状
+        const donut = L.polygon([
+            // 外側の四角形（時計回り）
+            [[35.655, 139.68], [35.655, 139.72], [35.675, 139.72], [35.675, 139.68]],
+            // 内側の穴（反時計回りにするのが一般的だが、Leafletはどちらでも動作）
+            [[35.660, 139.69], [35.660, 139.71], [35.670, 139.71], [35.670, 139.69]]
+        ], {
+            color: 'blue',
+            fillColor: '#4169E1',
+            fillOpacity: 0.4
+        }).addTo(map).bindPopup('穴あきポリゴン（ドーナツ型）');
+    </script>
+</body>
+</html>

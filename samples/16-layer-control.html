@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16 - レイヤーコントロール</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 550px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>16 - レイヤーコントロール</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> Leaflet標準のレイヤーコントロールUIを使用してベースマップとオーバーレイを切り替えます。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>L.control.layers() でコントロールを作成</li>
+                <li>第1引数: ベースレイヤー（ラジオボタン、排他的）</li>
+                <li>第2引数: オーバーレイ（チェックボックス、複数選択可）</li>
+                <li>地図右上のアイコンをクリックしてレイヤーを切り替え</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="code-section">
+            <pre>
+// ベースレイヤーを定義
+const baseLayers = {
+    "OpenStreetMap": osmLayer,
+    "CartoDB Light": cartoLight,
+    "CartoDB Dark": cartoDark
+};
+
+// オーバーレイレイヤーを定義
+const overlays = {
+    "レストラン": restaurantsGroup,
+    "ホテル": hotelsGroup,
+    "駅": stationsGroup
+};
+
+// レイヤーコントロールを追加
+L.control.layers(baseLayers, overlays, {
+    collapsed: false,  // 常に展開表示
+    position: 'topright'
+}).addTo(map);
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // レイヤーコントロールのサンプル
+        // Leaflet標準のレイヤー切り替えUIを使用
+        // ========================================
+
+        // ----------------------------------------
+        // ベースレイヤー（タイルレイヤー）を定義
+        // ----------------------------------------
+        // ベースレイヤーはラジオボタンで排他的に選択
+        // 一度に1つしか表示できない
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        });
+
+        const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        });
+
+        const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        });
+
+        const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri'
+        });
+
+        // ----------------------------------------
+        // 地図を初期化
+        // ----------------------------------------
+        // layers オプションで初期表示するレイヤーを指定
+        const map = L.map('map', {
+            center: [35.6812, 139.7671],
+            zoom: 13,
+            layers: [osmLayer]  // 初期表示するベースレイヤー
+        });
+
+        // カスタムアイコンの作成関数
+        function createIcon(emoji) {
+            return L.divIcon({
+                className: '',
+                html: `<div style="font-size: 24px;">${emoji}</div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -10]
+            });
+        }
+
+        // ----------------------------------------
+        // オーバーレイレイヤーを作成
+        // ----------------------------------------
+        // オーバーレイはチェックボックスで複数選択可能
+        // マーカー、ポリゴン、ポリラインなどをグループ化
+        const restaurantsGroup = L.layerGroup();
+        const hotelsGroup = L.layerGroup();
+        const stationsGroup = L.layerGroup();
+        const parksGroup = L.layerGroup();
+
+        // レストランデータ
+        [
+            { name: 'イタリアンレストラン', lat: 35.6830, lng: 139.7700 },
+            { name: '和食レストラン', lat: 35.6780, lng: 139.7650 },
+            { name: 'フレンチレストラン', lat: 35.6850, lng: 139.7600 }
+        ].forEach(r => {
+            L.marker([r.lat, r.lng], { icon: createIcon('🍜') })
+                .bindPopup(`<b>${r.name}</b>`)
+                .addTo(restaurantsGroup);
+        });
+
+        // ホテルデータ
+        [
+            { name: 'グランドホテル', lat: 35.6870, lng: 139.7680 },
+            { name: 'ビジネスホテル', lat: 35.6800, lng: 139.7580 }
+        ].forEach(h => {
+            L.marker([h.lat, h.lng], { icon: createIcon('🏨') })
+                .bindPopup(`<b>${h.name}</b>`)
+                .addTo(hotelsGroup);
+        });
+
+        // 駅データ
+        [
+            { name: '東京駅', lat: 35.6812, lng: 139.7671 },
+            { name: '有楽町駅', lat: 35.6750, lng: 139.7630 },
+            { name: '神田駅', lat: 35.6917, lng: 139.7703 }
+        ].forEach(s => {
+            L.marker([s.lat, s.lng], { icon: createIcon('🚉') })
+                .bindPopup(`<b>${s.name}</b>`)
+                .addTo(stationsGroup);
+        });
+
+        // 公園データ（ポリゴン）
+        L.polygon([
+            [35.6880, 139.7520],
+            [35.6880, 139.7580],
+            [35.6830, 139.7580],
+            [35.6830, 139.7520]
+        ], {
+            color: 'green',
+            fillColor: '#90EE90',
+            fillOpacity: 0.5
+        }).bindPopup('公園エリア').addTo(parksGroup);
+
+        L.polygon([
+            [35.6750, 139.7700],
+            [35.6750, 139.7750],
+            [35.6720, 139.7750],
+            [35.6720, 139.7700]
+        ], {
+            color: 'green',
+            fillColor: '#90EE90',
+            fillOpacity: 0.5
+        }).bindPopup('公園エリア2').addTo(parksGroup);
+
+        // ----------------------------------------
+        // レイヤーコントロール用のオブジェクトを作成
+        // ----------------------------------------
+        // キーがコントロールに表示される名前
+        // 値がレイヤーオブジェクト
+        const baseLayers = {
+            "OpenStreetMap": osmLayer,
+            "CartoDB Light": cartoLight,
+            "CartoDB Dark": cartoDark,
+            "衛星写真": esriSatellite
+        };
+
+        // オーバーレイのオブジェクト（絵文字も使える）
+        const overlays = {
+            "🍜 レストラン": restaurantsGroup,
+            "🏨 ホテル": hotelsGroup,
+            "🚉 駅": stationsGroup,
+            "🌳 公園": parksGroup
+        };
+
+        // 初期表示するオーバーレイを地図に追加
+        // コントロールに登録するだけでは表示されない
+        restaurantsGroup.addTo(map);
+        stationsGroup.addTo(map);
+
+        // ----------------------------------------
+        // L.control.layers() でコントロールを追加
+        // ----------------------------------------
+        // 第1引数: ベースレイヤー（ラジオボタン）
+        // 第2引数: オーバーレイ（チェックボックス）
+        // 第3引数: オプション
+        L.control.layers(baseLayers, overlays, {
+            collapsed: true,   // true: マウスオーバーで展開, false: 常に展開
+            position: 'topright'  // 配置位置
+        }).addTo(map);
+
+        // ----------------------------------------
+        // レイヤー切り替えイベントの監視
+        // ----------------------------------------
+        // ユーザーがレイヤーを切り替えたときに処理を実行できる
+        map.on('baselayerchange', function(e) {
+            console.log('ベースレイヤー変更:', e.name);
+        });
+
+        map.on('overlayadd', function(e) {
+            console.log('オーバーレイ追加:', e.name);
+        });
+
+        map.on('overlayremove', function(e) {
+            console.log('オーバーレイ削除:', e.name);
+        });
+    </script>
+</body>
+</html>

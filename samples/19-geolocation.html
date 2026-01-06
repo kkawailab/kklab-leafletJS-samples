@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>19 - モバイル対応と現在地表示</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .controls button {
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+            transition: background 0.3s;
+        }
+        .controls button:hover {
+            background: #0056b3;
+        }
+        .controls button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status-panel {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .locate-button {
+            width: 34px;
+            height: 34px;
+            background: white;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .locate-button:hover {
+            background: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>19 - モバイル対応と現在地表示</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> ブラウザの位置情報APIを使用して現在地を地図上に表示します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>map.locate() でブラウザの位置情報を取得</li>
+                <li>locationfound イベントで位置取得成功時の処理</li>
+                <li>locationerror イベントでエラー処理</li>
+                <li>setView: true で自動的にその位置に移動</li>
+            </ul>
+            <p><strong>注意:</strong></p>
+            <ul>
+                <li>ブラウザで位置情報の許可が必要です</li>
+                <li><strong>HTTPS接続またはlocalhost</strong>でのみ動作します（http://やfile://では動作しません）</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="controls">
+            <button onclick="locateMe()" id="locateBtn">現在地を取得</button>
+            <button onclick="watchPosition()" id="watchBtn">位置を追跡</button>
+            <button onclick="stopWatch()" id="stopBtn" disabled>追跡を停止</button>
+        </div>
+
+        <div class="status-panel">
+            <div id="status">位置情報: 未取得</div>
+            <div id="accuracy"></div>
+        </div>
+
+        <div class="code-section">
+            <pre>
+// 現在地を取得して移動
+map.locate({
+    setView: true,
+    maxZoom: 16
+});
+
+// 位置取得成功時
+map.on('locationfound', function(e) {
+    const radius = e.accuracy / 2;
+
+    L.marker(e.latlng)
+        .addTo(map)
+        .bindPopup(`現在地（精度: ${radius}m）`);
+
+    L.circle(e.latlng, {
+        radius: radius
+    }).addTo(map);
+});
+
+// 位置取得失敗時
+map.on('locationerror', function(e) {
+    alert('位置情報を取得できませんでした: ' + e.message);
+});
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // 現在地表示（Geolocation）のサンプル
+        // ブラウザの位置情報APIを使用
+        // ========================================
+
+        // 地図を初期化
+        const map = L.map('map').setView([35.6812, 139.7671], 13);
+
+        // タイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // 位置情報関連の変数
+        let locationMarker = null;   // 現在地マーカー
+        let locationCircle = null;   // 精度を示す円
+        let watchId = null;          // 追跡用のID
+
+        // ----------------------------------------
+        // 現在地マーカーのカスタムアイコン
+        // ----------------------------------------
+        const locationIcon = L.divIcon({
+            className: '',
+            html: `<div style="
+                width: 20px;
+                height: 20px;
+                background: #4285f4;
+                border: 3px solid white;
+                border-radius: 50%;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            "></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        // 位置情報の更新
+        function updateLocation(e) {
+            const lat = e.latlng.lat.toFixed(6);
+            const lng = e.latlng.lng.toFixed(6);
+            const accuracy = e.accuracy;
+
+            // 既存のマーカーと円を削除
+            if (locationMarker) {
+                map.removeLayer(locationMarker);
+            }
+            if (locationCircle) {
+                map.removeLayer(locationCircle);
+            }
+
+            // 新しいマーカーと円を追加
+            locationMarker = L.marker(e.latlng, { icon: locationIcon })
+                .addTo(map)
+                .bindPopup(`
+                    <b>現在地</b><br>
+                    緯度: ${lat}<br>
+                    経度: ${lng}<br>
+                    精度: ${accuracy.toFixed(0)}m
+                `);
+
+            locationCircle = L.circle(e.latlng, {
+                radius: accuracy,
+                color: '#4285f4',
+                fillColor: '#4285f4',
+                fillOpacity: 0.15,
+                weight: 2
+            }).addTo(map);
+
+            // ステータス更新
+            document.getElementById('status').innerHTML =
+                `位置情報: 緯度 ${lat}, 経度 ${lng}`;
+            document.getElementById('accuracy').innerHTML =
+                `精度: 約 ${accuracy.toFixed(0)}m`;
+        }
+
+        // ----------------------------------------
+        // 位置情報イベントハンドラー
+        // ----------------------------------------
+
+        // 位置取得成功時: locationfound イベント
+        // e.latlng: 位置座標
+        // e.accuracy: 精度（メートル）
+        map.on('locationfound', function(e) {
+            updateLocation(e);
+        });
+
+        // 位置取得失敗時: locationerror イベント
+        // よくある原因: ユーザーが許可しなかった、HTTPSでない、など
+        map.on('locationerror', function(e) {
+            document.getElementById('status').innerHTML =
+                `エラー: ${e.message}`;
+            document.getElementById('accuracy').innerHTML = '';
+            alert('位置情報を取得できませんでした。\nブラウザの位置情報設定を確認してください。');
+        });
+
+        // ----------------------------------------
+        // map.locate() で現在地を取得
+        // ----------------------------------------
+        function locateMe() {
+            document.getElementById('status').innerHTML = '位置情報を取得中...';
+            document.getElementById('locateBtn').disabled = true;
+
+            // locate() のオプション
+            map.locate({
+                setView: true,           // 取得した位置に自動移動
+                maxZoom: 16,             // 自動移動時の最大ズーム
+                enableHighAccuracy: true // 高精度モード（GPS使用）
+            });
+
+            setTimeout(() => {
+                document.getElementById('locateBtn').disabled = false;
+            }, 1000);
+        }
+
+        // ----------------------------------------
+        // 位置を継続的に追跡
+        // ----------------------------------------
+        // watch: true でリアルタイム追跡
+        function watchPosition() {
+            document.getElementById('status').innerHTML = '位置を追跡中...';
+            document.getElementById('watchBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+
+            map.locate({
+                watch: true,             // 継続的に位置を追跡
+                setView: true,
+                maxZoom: 16,
+                enableHighAccuracy: true
+            });
+        }
+
+        // ----------------------------------------
+        // 追跡を停止
+        // ----------------------------------------
+        function stopWatch() {
+            // stopLocate() で追跡を停止
+            map.stopLocate();
+            document.getElementById('watchBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('status').innerHTML += ' (追跡停止)';
+        }
+
+        // 現在地ボタンをコントロールとして追加
+        const LocateControl = L.Control.extend({
+            options: {
+                position: 'topleft'
+            },
+            onAdd: function(map) {
+                const container = L.DomUtil.create('div', '');
+                const button = L.DomUtil.create('button', 'locate-button', container);
+                button.innerHTML = '📍';
+                button.title = '現在地を取得';
+
+                L.DomEvent.on(button, 'click', function(e) {
+                    L.DomEvent.stopPropagation(e);
+                    locateMe();
+                });
+
+                L.DomEvent.disableClickPropagation(container);
+                return container;
+            }
+        });
+        new LocateControl().addTo(map);
+
+        // デモ用: 位置情報が使えない環境用のシミュレーション
+        L.marker([35.6812, 139.7671])
+            .addTo(map)
+            .bindPopup('デモ位置（東京駅）<br>実際の現在地ではありません');
+    </script>
+</body>
+</html>

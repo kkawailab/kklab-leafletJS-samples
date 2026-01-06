@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03 - ポップアップを表示</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>03 - ポップアップを表示</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> マーカーや地図上にポップアップ（吹き出し）を表示します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>bindPopup() でマーカーにポップアップをバインド</li>
+                <li>openPopup() で自動的にポップアップを開く</li>
+                <li>ポップアップ内にはHTMLを記述可能</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="code-section">
+            <pre>
+// マーカーにポップアップをバインド
+const marker = L.marker([35.6812, 139.7671])
+    .addTo(map)
+    .bindPopup('&lt;b&gt;東京駅&lt;/b&gt;&lt;br&gt;日本の中心駅です。')
+    .openPopup();
+
+// 独立したポップアップ
+L.popup()
+    .setLatLng([35.6852, 139.7528])
+    .setContent('皇居')
+    .openOn(map);
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // ポップアップ（吹き出し）を表示するサンプル
+        // ========================================
+
+        // 地図を初期化
+        const map = L.map('map').setView([35.6812, 139.7671], 14);
+
+        // タイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // 方法1: マーカーにポップアップをバインドする
+        // ----------------------------------------
+        // .bindPopup() でマーカーにポップアップを紐づける
+        // ポップアップ内にはHTMLを記述可能（<b>タグなど）
+        // .openPopup() を呼ぶと、ページ読み込み時に自動で開く
+        const marker = L.marker([35.6812, 139.7671])
+            .addTo(map)
+            .bindPopup('<b>東京駅</b><br>日本の中心駅です。')  // HTMLで装飾可能
+            .openPopup();  // 初期表示時にポップアップを開く
+
+        // ----------------------------------------
+        // 方法2: 独立したポップアップを作成する
+        // ----------------------------------------
+        // マーカーなしでポップアップだけを表示することも可能
+        // L.popup() でポップアップオブジェクトを作成
+        // .setLatLng() で表示位置を指定
+        // .setContent() で表示内容を設定
+        // .openOn(map) で地図上に表示
+        L.popup()
+            .setLatLng([35.6852, 139.7528])
+            .setContent('皇居')
+            .openOn(map);
+
+        // 注意: openOn() を使うと、他の開いているポップアップは自動的に閉じる
+        //       複数のポップアップを同時に開きたい場合は addTo(map) を使う
+    </script>
+</body>
+</html>

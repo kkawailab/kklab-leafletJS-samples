@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>25 - 動的なマーカー追加・削除</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .main-content {
+            display: flex;
+            gap: 20px;
+        }
+        #map {
+            flex: 1;
+            height: 550px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .sidebar {
+            width: 300px;
+        }
+        .marker-form {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .marker-form h3 {
+            margin-bottom: 10px;
+        }
+        .marker-form input, .marker-form select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .marker-form button {
+            width: 100%;
+            padding: 10px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .marker-form button:hover {
+            background: #218838;
+        }
+        .marker-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .marker-list h3 {
+            margin-bottom: 10px;
+        }
+        .marker-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: white;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .marker-item button {
+            padding: 3px 8px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .marker-item button:hover {
+            background: #c82333;
+        }
+        .marker-item .goto-btn {
+            background: #007bff;
+            margin-right: 5px;
+        }
+        .marker-item .goto-btn:hover {
+            background: #0056b3;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>25 - 動的なマーカー追加・削除</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> ユーザー操作やデータに基づいてマーカーを動的に追加・削除・更新します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>addTo() / remove() でマーカーを追加・削除</li>
+                <li>setLatLng() で位置を更新</li>
+                <li>マーカーの参照を配列で管理</li>
+                <li>地図クリックでマーカーを追加</li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <div id="map"></div>
+            <div class="sidebar">
+                <div class="marker-form">
+                    <h3>マーカーを追加</h3>
+                    <input type="text" id="markerName" placeholder="名前">
+                    <input type="number" id="markerLat" placeholder="緯度" step="0.0001" value="35.6812">
+                    <input type="number" id="markerLng" placeholder="経度" step="0.0001" value="139.7671">
+                    <select id="markerType">
+                        <option value="default">通常マーカー</option>
+                        <option value="restaurant">レストラン 🍜</option>
+                        <option value="hotel">ホテル 🏨</option>
+                        <option value="station">駅 🚉</option>
+                    </select>
+                    <button onclick="addMarkerFromForm()">追加</button>
+                </div>
+                <div class="marker-list">
+                    <h3>マーカー一覧 (<span id="markerCount">0</span>)</h3>
+                    <div id="markerListItems"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="code-section">
+            <pre>
+// マーカーを追加
+function addMarker(name, lat, lng) {
+    const marker = L.marker([lat, lng])
+        .addTo(map)
+        .bindPopup(name);
+
+    markers.push({ id: Date.now(), name, marker });
+    updateMarkerList();
+}
+
+// マーカーを削除
+function removeMarker(id) {
+    const index = markers.findIndex(m => m.id === id);
+    if (index !== -1) {
+        markers[index].marker.remove();
+        markers.splice(index, 1);
+        updateMarkerList();
+    }
+}
+
+// マーカー位置を更新
+marker.setLatLng([newLat, newLng]);
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // 動的なマーカー追加・削除のサンプル
+        // ユーザー操作でマーカーを管理する
+        // ========================================
+
+        // ----------------------------------------
+        // 地図を初期化
+        // ----------------------------------------
+        const map = L.map('map').setView([35.6812, 139.7671], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // マーカー管理用の変数
+        // ----------------------------------------
+        // マーカーの参照を配列で保持することで、後から操作できる
+        let markers = [];   // マーカーデータの配列
+        let markerId = 0;   // 一意のID生成用カウンター
+
+        // ----------------------------------------
+        // カスタムアイコンの定義
+        // ----------------------------------------
+        // 種類ごとに異なるアイコンを用意
+        const icons = {
+            default: null,  // null = Leafletのデフォルトアイコンを使用
+            restaurant: L.divIcon({
+                className: '',
+                html: '<div style="font-size: 24px;">🍜</div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]  // アイコンの中心を基準点に
+            }),
+            hotel: L.divIcon({
+                className: '',
+                html: '<div style="font-size: 24px;">🏨</div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            }),
+            station: L.divIcon({
+                className: '',
+                html: '<div style="font-size: 24px;">🚉</div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            })
+        };
+
+        // ----------------------------------------
+        // マーカーを追加する関数
+        // ----------------------------------------
+        // addTo() でマーカーを地図に追加
+        function addMarker(name, lat, lng, type = 'default') {
+            const id = ++markerId;
+            // アイコンが定義されている場合はオプションに追加
+            const options = icons[type] ? { icon: icons[type] } : {};
+
+            // L.marker() でマーカーを作成
+            // .addTo(map) で地図に追加
+            // .bindPopup() でポップアップをバインド
+            const marker = L.marker([lat, lng], options)
+                .addTo(map)
+                .bindPopup(`<b>${name}</b><br>緯度: ${lat}<br>経度: ${lng}`);
+
+            // マーカーの参照を配列に保存
+            // 後でアクセスできるようにID、座標、マーカーオブジェクトを保持
+            markers.push({
+                id: id,
+                name: name,
+                lat: lat,
+                lng: lng,
+                type: type,
+                marker: marker  // Leafletのマーカーオブジェクト
+            });
+
+            // UIリストを更新
+            updateMarkerList();
+            return id;
+        }
+
+        // ----------------------------------------
+        // フォームからマーカーを追加
+        // ----------------------------------------
+        function addMarkerFromForm() {
+            // フォームから値を取得
+            const name = document.getElementById('markerName').value || `マーカー ${markerId + 1}`;
+            const lat = parseFloat(document.getElementById('markerLat').value);
+            const lng = parseFloat(document.getElementById('markerLng').value);
+            const type = document.getElementById('markerType').value;
+
+            // 入力検証
+            if (isNaN(lat) || isNaN(lng)) {
+                alert('緯度・経度を正しく入力してください');
+                return;
+            }
+
+            addMarker(name, lat, lng, type);
+
+            // フォームをリセット
+            document.getElementById('markerName').value = '';
+        }
+
+        // ----------------------------------------
+        // マーカーを削除する関数
+        // ----------------------------------------
+        // remove() でマーカーを地図から削除
+        function removeMarker(id) {
+            // 配列からIDに一致するマーカーを検索
+            const index = markers.findIndex(m => m.id === id);
+            if (index !== -1) {
+                // marker.remove() で地図からマーカーを削除
+                markers[index].marker.remove();
+                // 配列からも削除
+                markers.splice(index, 1);
+                updateMarkerList();
+            }
+        }
+
+        // ----------------------------------------
+        // マーカーの位置にズーム
+        // ----------------------------------------
+        function gotoMarker(id) {
+            const markerData = markers.find(m => m.id === id);
+            if (markerData) {
+                // setView() で地図の中心とズームを変更
+                map.setView([markerData.lat, markerData.lng], 16);
+                // openPopup() でポップアップを開く
+                markerData.marker.openPopup();
+            }
+        }
+
+        // ----------------------------------------
+        // マーカーリストのUI更新
+        // ----------------------------------------
+        function updateMarkerList() {
+            const listElement = document.getElementById('markerListItems');
+            // マーカー数を表示
+            document.getElementById('markerCount').textContent = markers.length;
+
+            if (markers.length === 0) {
+                listElement.innerHTML = '<p style="color: #666; font-size: 14px;">マーカーがありません</p>';
+                return;
+            }
+
+            // 各マーカーのHTMLを生成
+            // onclick でボタンクリック時の処理を指定
+            listElement.innerHTML = markers.map(m => `
+                <div class="marker-item">
+                    <span>${m.name}</span>
+                    <div>
+                        <button class="goto-btn" onclick="gotoMarker(${m.id})">移動</button>
+                        <button onclick="removeMarker(${m.id})">削除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ----------------------------------------
+        // 地図クリックでマーカーを追加
+        // ----------------------------------------
+        // click イベントでクリック位置の座標を取得
+        map.on('click', function(e) {
+            // e.latlng でクリックした位置の緯度経度を取得
+            const lat = e.latlng.lat.toFixed(6);
+            const lng = e.latlng.lng.toFixed(6);
+
+            // 入力フィールドに座標をセット（ユーザーの便宜のため）
+            document.getElementById('markerLat').value = lat;
+            document.getElementById('markerLng').value = lng;
+
+            // 確認ダイアログで追加するかどうか確認
+            if (confirm(`この位置にマーカーを追加しますか？\n緯度: ${lat}\n経度: ${lng}`)) {
+                const name = document.getElementById('markerName').value || `マーカー ${markerId + 1}`;
+                const type = document.getElementById('markerType').value;
+                addMarker(name, parseFloat(lat), parseFloat(lng), type);
+            }
+        });
+
+        // ----------------------------------------
+        // 初期マーカーを追加
+        // ----------------------------------------
+        addMarker('東京駅', 35.6812, 139.7671, 'station');
+        addMarker('新宿駅', 35.6896, 139.7006, 'station');
+        addMarker('和食レストラン', 35.6850, 139.7600, 'restaurant');
+
+        // 初期リストを表示
+        updateMarkerList();
+
+        // ヒント: マーカーの動的操作まとめ
+        // - marker.addTo(map): マーカーを地図に追加
+        // - marker.remove(): マーカーを地図から削除
+        // - marker.setLatLng([lat, lng]): マーカーの位置を変更
+        // - marker.setIcon(icon): アイコンを変更
+        // - marker.openPopup() / closePopup(): ポップアップの開閉
+        // - marker.getLatLng(): 現在の座標を取得
+    </script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>26 - アニメーション付きマーカー</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .controls button {
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+        }
+        .controls button:hover {
+            background: #0056b3;
+        }
+        .controls label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .controls input[type="range"] {
+            width: 100px;
+        }
+        /* パルスアニメーション */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .pulse-marker {
+            position: relative;
+        }
+        .pulse-marker::before {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 0, 0, 0.4);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            top: -5px;
+            left: -5px;
+        }
+        /* 回転アニメーション */
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .rotating-icon {
+            animation: rotate 3s linear infinite;
+        }
+        /* バウンスアニメーション */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .bouncing-icon {
+            animation: bounce 1s ease-in-out infinite;
+        }
+        .code-section {
+            margin-top: 20px;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>26 - アニメーション付きマーカー</h1>
+        <div class="description">
+            <p><strong>学習内容:</strong> CSSアニメーションとJavaScriptを使ってマーカーにアニメーション効果を追加します。</p>
+            <p><strong>ポイント:</strong></p>
+            <ul>
+                <li>CSSアニメーションでパルス・回転・バウンス効果</li>
+                <li>setInterval で位置をアニメーション</li>
+                <li>ルートに沿った移動アニメーション</li>
+                <li>requestAnimationFrame でスムーズなアニメーション</li>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="controls">
+            <button onclick="startMoving()">移動開始</button>
+            <button onclick="stopMoving()">停止</button>
+            <button onclick="resetPosition()">リセット</button>
+            <label>
+                速度:
+                <input type="range" id="speedSlider" min="1" max="10" value="5" oninput="updateSpeed(this.value)">
+                <span id="speedValue">5</span>
+            </label>
+        </div>
+
+        <div class="code-section">
+            <pre>
+// CSSアニメーション用のDivIcon
+const pulseIcon = L.divIcon({
+    className: 'pulse-marker',
+    html: '&lt;div style="..."&gt;📍&lt;/div&gt;',
+    iconSize: [20, 20]
+});
+
+// JavaScriptでマーカーを移動
+let position = 0;
+const route = [[35.68, 139.76], [35.69, 139.77], ...];
+
+function animate() {
+    position += speed;
+    if (position >= route.length) position = 0;
+
+    marker.setLatLng(route[position]);
+    requestAnimationFrame(animate);
+}
+            </pre>
+        </div>
+    </div>
+
+    <!-- Leaflet.js本体を読み込む -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ========================================
+        // アニメーション付きマーカーのサンプル
+        // CSSアニメーションとJavaScriptで動きを付ける
+        // ========================================
+
+        // ----------------------------------------
+        // 地図を初期化
+        // ----------------------------------------
+        const map = L.map('map').setView([35.6812, 139.7671], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // ========================================
+        // 1. パルスアニメーションマーカー
+        // ========================================
+        // CSSの @keyframes pulse を使用（HTMLのstyleタグで定義）
+        const pulseIcon = L.divIcon({
+            className: '',
+            html: `
+                <div class="pulse-marker">
+                    <div style="width: 20px; height: 20px; background: red; border-radius: 50%; border: 3px solid white;"></div>
+                </div>
+            `,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        L.marker([35.6812, 139.7671], { icon: pulseIcon })
+            .addTo(map)
+            .bindPopup('パルスアニメーション');
+
+        // ========================================
+        // 2. 回転アニメーションマーカー
+        // ========================================
+        // CSSの @keyframes rotate を使用
+        const rotatingIcon = L.divIcon({
+            className: '',
+            html: '<div class="rotating-icon" style="font-size: 30px;">⚙️</div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
+        L.marker([35.6896, 139.7006], { icon: rotatingIcon })
+            .addTo(map)
+            .bindPopup('回転アニメーション');
+
+        // ========================================
+        // 3. バウンスアニメーションマーカー
+        // ========================================
+        // CSSの @keyframes bounce を使用
+        const bouncingIcon = L.divIcon({
+            className: '',
+            html: '<div class="bouncing-icon" style="font-size: 30px;">📍</div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30]
+        });
+
+        L.marker([35.6580, 139.7016], { icon: bouncingIcon })
+            .addTo(map)
+            .bindPopup('バウンスアニメーション');
+
+        // ========================================
+        // 4. 移動アニメーションマーカー
+        // ========================================
+        // JavaScriptでマーカーの位置を動的に変更
+
+        // ルートを定義（山手線風の経路）
+        const route = [
+            [35.6812, 139.7671],  // 東京
+            [35.6917, 139.7703],  // 神田
+            [35.6983, 139.7731],  // 秋葉原
+            [35.7141, 139.7774],  // 上野
+            [35.7281, 139.7710],  // 日暮里
+            [35.7321, 139.7090],  // 池袋
+            [35.7057, 139.6849],  // 目白
+            [35.6896, 139.7006],  // 新宿
+            [35.6580, 139.7016],  // 渋谷
+            [35.6302, 139.7407],  // 大崎
+            [35.6284, 139.7387],  // 品川
+            [35.6558, 139.7567],  // 浜松町
+            [35.6657, 139.7580],  // 新橋
+            [35.6812, 139.7671]   // 東京に戻る
+        ];
+
+        // ----------------------------------------
+        // ルートを補間して滑らかにする
+        // ----------------------------------------
+        // 2点間を細かいステップに分割して滑らかな移動を実現
+        function interpolateRoute(route, steps = 50) {
+            const interpolated = [];
+
+            for (let i = 0; i < route.length - 1; i++) {
+                const start = route[i];
+                const end = route[i + 1];
+
+                for (let j = 0; j < steps; j++) {
+                    const t = j / steps;
+                    interpolated.push([
+                        start[0] + (end[0] - start[0]) * t,
+                        start[1] + (end[1] - start[1]) * t
+                    ]);
+                }
+            }
+
+            return interpolated;
+        }
+
+        // 30ステップで補間（細かいほど滑らか、処理は重くなる）
+        const smoothRoute = interpolateRoute(route, 30);
+
+        // ルートをポリラインで表示
+        L.polyline(route, {
+            color: 'green',
+            weight: 3,
+            opacity: 0.7,
+            dashArray: '10, 5'
+        }).addTo(map);
+
+        // ----------------------------------------
+        // 移動するマーカーの作成
+        // ----------------------------------------
+        const movingIcon = L.divIcon({
+            className: '',
+            html: '<div style="font-size: 28px;">🚃</div>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+        });
+
+        // マーカーを初期位置に配置
+        const movingMarker = L.marker(route[0], { icon: movingIcon })
+            .addTo(map)
+            .bindPopup('移動中の電車');
+
+        // 軌跡（移動した跡）を表示するポリライン
+        const trail = L.polyline([], {
+            color: 'red',
+            weight: 2,
+            opacity: 0.8
+        }).addTo(map);
+
+        // ----------------------------------------
+        // アニメーション用の変数
+        // ----------------------------------------
+        let position = 0;        // 現在のルート上の位置（インデックス）
+        let speed = 5;           // 移動速度（1フレームで進むステップ数）
+        let animationId = null;  // setTimeout のID（停止用）
+        let isMoving = false;    // 移動中かどうかのフラグ
+
+        // ----------------------------------------
+        // アニメーション関数
+        // ----------------------------------------
+        // setTimeout で繰り返し呼び出してアニメーションを実現
+        function animate() {
+            if (!isMoving) return;
+
+            // 位置を進める
+            position += speed;
+            if (position >= smoothRoute.length) {
+                position = 0;
+                trail.setLatLngs([]);  // ルート一周で軌跡をリセット
+            }
+
+            // マーカーの位置を更新
+            // setLatLng() でマーカーの位置を変更
+            const currentPos = smoothRoute[position];
+            movingMarker.setLatLng(currentPos);
+
+            // 軌跡を追加
+            const trailLatLngs = trail.getLatLngs();
+            trailLatLngs.push(L.latLng(currentPos));
+            if (trailLatLngs.length > 100) {
+                trailLatLngs.shift();  // 古い軌跡を削除（メモリ節約）
+            }
+            trail.setLatLngs(trailLatLngs);
+
+            // 50ms後に再度実行（約20FPS）
+            animationId = setTimeout(animate, 50);
+        }
+
+        // ----------------------------------------
+        // コントロール関数
+        // ----------------------------------------
+
+        // 移動開始
+        function startMoving() {
+            if (isMoving) return;
+            isMoving = true;
+            animate();
+        }
+
+        // 停止
+        function stopMoving() {
+            isMoving = false;
+            if (animationId) {
+                clearTimeout(animationId);
+            }
+        }
+
+        // リセット
+        function resetPosition() {
+            stopMoving();
+            position = 0;
+            movingMarker.setLatLng(route[0]);
+            trail.setLatLngs([]);
+        }
+
+        // 速度更新（スライダーの値を反映）
+        function updateSpeed(value) {
+            speed = parseInt(value);
+            document.getElementById('speedValue').textContent = value;
+        }
+
+        // 初期状態で移動開始
+        startMoving();
+
+        // ヒント: アニメーションの実装方法
+        // 1. CSSアニメーション: パルス、回転、バウンスなど視覚効果に最適
+        // 2. setTimeout/setInterval: シンプルな繰り返し処理
+        // 3. requestAnimationFrame: よりスムーズなアニメーション（推奨）
+        // 4. setLatLng(): マーカーの位置を動的に変更
+    </script>
+</body>
+</html>

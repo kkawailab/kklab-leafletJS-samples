@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet.js 学習用サンプル集</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --secondary: #4caf50;
+            --bg-light: #f5f5f5;
+            --text: #333;
+            --text-light: #666;
+            --card-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg-light);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></svg>') repeat;
+            background-size: 100px 100px;
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            margin-bottom: 25px;
+        }
+
+        .hero-badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Mini Map */
+        #hero-map {
+            height: 200px;
+            width: 100%;
+            max-width: 600px;
+            margin: 30px auto 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .section-header p {
+            color: var(--text-light);
+        }
+
+        /* Level Sections */
+        .level-section {
+            margin-bottom: 50px;
+        }
+
+        .level-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .level-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .level-beginner .level-icon { background: #4caf50; }
+        .level-intermediate .level-icon { background: #ff9800; }
+        .level-advanced .level-icon { background: #f44336; }
+
+        .level-header h3 {
+            font-size: 1.4rem;
+            color: var(--text);
+        }
+
+        .level-header span {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* Sample Cards */
+        .samples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .sample-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .sample-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .sample-card-header {
+            padding: 15px 20px;
+            background: var(--bg-light);
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sample-number {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .sample-card-header h4 {
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .sample-card-body {
+            padding: 15px 20px;
+        }
+
+        .sample-card-body p {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+
+        .sample-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            background: #e8f5e9;
+            color: var(--primary);
+            border-radius: 3px;
+        }
+
+        /* Resources Section */
+        .resources {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .resources h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .resource-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text);
+            transition: background 0.2s;
+        }
+
+        .resource-link:hover {
+            background: #e8f5e9;
+        }
+
+        .resource-link span {
+            font-size: 1.5rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 50px;
+        }
+
+        footer a {
+            color: var(--secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .level-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .samples-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Leaflet.js 学習用サンプル集</h1>
+            <p>初心者から上級者まで、段階的に学べる30個のインタラクティブなサンプル</p>
+            <div class="hero-badges">
+                <span class="badge">30個のサンプル</span>
+                <span class="badge">Leaflet.js v1.9.4</span>
+                <span class="badge">日本語解説</span>
+                <span class="badge">コピペで動く</span>
+            </div>
+            <div id="hero-map"></div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="section-header">
+            <h2>サンプル一覧</h2>
+            <p>各サンプルは独立したHTMLファイルで、ブラウザで直接開いて動作確認できます</p>
+        </div>
+
+        <!-- Beginner Level -->
+        <section class="level-section level-beginner">
+            <div class="level-header">
+                <div class="level-icon">🌱</div>
+                <div>
+                    <h3>初級レベル</h3>
+                    <span>基本的な地図表示からシンプルな図形描画まで</span>
+                </div>
+            </div>
+            <div class="samples-grid">
+                <a href="samples/01-basic-map.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">01</span>
+                        <h4>基本的な地図表示</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>Leaflet.jsで最初の地図を表示</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.map()</span>
+                            <span class="tag">L.tileLayer()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/02-marker.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">02</span>
+                        <h4>マーカーを追加</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>地図上に位置を示すマーカーを配置</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.marker()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/03-popup.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">03</span>
+                        <h4>ポップアップを表示</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>マーカーに情報を表示する吹き出し</p>
+                        <div class="sample-tags">
+                            <span class="tag">bindPopup()</span>
+                            <span class="tag">openPopup()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/04-multiple-markers.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">04</span>
+                        <h4>複数のマーカー</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>配列データから効率的にマーカーを生成</p>
+                        <div class="sample-tags">
+                            <span class="tag">forEach</span>
+                            <span class="tag">配列</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/05-circle.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">05</span>
+                        <h4>円を描画</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>円と円マーカーの違いを理解</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.circle()</span>
+                            <span class="tag">L.circleMarker()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/06-polygon.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">06</span>
+                        <h4>ポリゴンを描画</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>多角形と矩形でエリアを表現</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.polygon()</span>
+                            <span class="tag">L.rectangle()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/07-polyline.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">07</span>
+                        <h4>ポリラインを描画</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>ルートや経路を線で表現</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.polyline()</span>
+                            <span class="tag">dashArray</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/08-zoom-pan.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">08</span>
+                        <h4>ズームとパン操作</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>プログラムから地図を操作</p>
+                        <div class="sample-tags">
+                            <span class="tag">setView()</span>
+                            <span class="tag">flyTo()</span>
+                            <span class="tag">fitBounds()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/09-tile-layers.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">09</span>
+                        <h4>異なるタイルレイヤー</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>OSM, CartoDB, Esriなどを切り替え</p>
+                        <div class="sample-tags">
+                            <span class="tag">タイルプロバイダー</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/10-map-events.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">10</span>
+                        <h4>地図のイベント処理</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>クリック、ズーム、移動を検知</p>
+                        <div class="sample-tags">
+                            <span class="tag">map.on()</span>
+                            <span class="tag">イベント</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Intermediate Level -->
+        <section class="level-section level-intermediate">
+            <div class="level-header">
+                <div class="level-icon">🌿</div>
+                <div>
+                    <h3>中級レベル</h3>
+                    <span>カスタマイズとデータ表示</span>
+                </div>
+            </div>
+            <div class="samples-grid">
+                <a href="samples/11-custom-icons.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">11</span>
+                        <h4>カスタムアイコン</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>独自のマーカーアイコンを作成</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.icon()</span>
+                            <span class="tag">L.divIcon()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/12-draggable-marker.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">12</span>
+                        <h4>ドラッグ可能マーカー</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>ユーザーが位置を変更できるマーカー</p>
+                        <div class="sample-tags">
+                            <span class="tag">draggable</span>
+                            <span class="tag">dragend</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/13-geojson-basic.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">13</span>
+                        <h4>GeoJSONの基本</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>標準フォーマットで地理データを表示</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.geoJSON()</span>
+                            <span class="tag">FeatureCollection</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/14-geojson-styling.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">14</span>
+                        <h4>GeoJSONスタイリング</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>データに基づく動的スタイル設定</p>
+                        <div class="sample-tags">
+                            <span class="tag">style関数</span>
+                            <span class="tag">インタラクション</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/15-layer-groups.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">15</span>
+                        <h4>レイヤーグループ</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>複数レイヤーをまとめて管理</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.layerGroup()</span>
+                            <span class="tag">L.featureGroup()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/16-layer-control.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">16</span>
+                        <h4>レイヤーコントロール</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>UIでレイヤーを切り替え</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.control.layers()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/17-scale-control.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">17</span>
+                        <h4>スケールコントロール</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>縮尺バーと各種コントロール</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.control.scale()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/18-image-overlay.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">18</span>
+                        <h4>画像オーバーレイ</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>地図上に画像やSVGを配置</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.imageOverlay()</span>
+                            <span class="tag">L.svgOverlay()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/19-geolocation.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">19</span>
+                        <h4>現在地表示</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>ブラウザの位置情報APIを活用</p>
+                        <div class="sample-tags">
+                            <span class="tag">map.locate()</span>
+                            <span class="tag">モバイル対応</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/20-tooltip.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">20</span>
+                        <h4>ツールチップ</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>ホバー時に情報を表示</p>
+                        <div class="sample-tags">
+                            <span class="tag">bindTooltip()</span>
+                            <span class="tag">permanent</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Advanced Level -->
+        <section class="level-section level-advanced">
+            <div class="level-header">
+                <div class="level-icon">🌳</div>
+                <div>
+                    <h3>上級レベル</h3>
+                    <span>高度な機能とアプリケーション開発</span>
+                </div>
+            </div>
+            <div class="samples-grid">
+                <a href="samples/21-choropleth-map.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">21</span>
+                        <h4>コロプレスマップ</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>データ値で地域を色分け</p>
+                        <div class="sample-tags">
+                            <span class="tag">データ可視化</span>
+                            <span class="tag">凡例</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/22-custom-control.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">22</span>
+                        <h4>カスタムコントロール</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>独自のUIコントロールを作成</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.Control.extend()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/23-marker-cluster-concept.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">23</span>
+                        <h4>マーカークラスタ</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>大量マーカーのグループ化</p>
+                        <div class="sample-tags">
+                            <span class="tag">クラスタリング</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/24-map-bounds.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">24</span>
+                        <h4>境界と制限</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>表示範囲とズームを制限</p>
+                        <div class="sample-tags">
+                            <span class="tag">maxBounds</span>
+                            <span class="tag">minZoom</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/25-dynamic-markers.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">25</span>
+                        <h4>動的マーカー管理</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>マーカーの追加・削除・更新</p>
+                        <div class="sample-tags">
+                            <span class="tag">CRUD</span>
+                            <span class="tag">リスト連携</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/26-animated-marker.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">26</span>
+                        <h4>アニメーション</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>マーカーにアニメーション効果</p>
+                        <div class="sample-tags">
+                            <span class="tag">CSS Animation</span>
+                            <span class="tag">移動</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/27-wms-layer.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">27</span>
+                        <h4>WMSレイヤー</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>Web Map Serviceとの連携</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.tileLayer.wms()</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/28-non-geographical-map.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">28</span>
+                        <h4>非地理的マップ</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>フロアプランやゲームマップ</p>
+                        <div class="sample-tags">
+                            <span class="tag">L.CRS.Simple</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/29-map-panes.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">29</span>
+                        <h4>マップペイン</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>レイヤーの重なり順を制御</p>
+                        <div class="sample-tags">
+                            <span class="tag">createPane()</span>
+                            <span class="tag">z-index</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="samples/30-store-locator.html" class="sample-card">
+                    <div class="sample-card-header">
+                        <span class="sample-number">30</span>
+                        <h4>総合アプリケーション</h4>
+                    </div>
+                    <div class="sample-card-body">
+                        <p>店舗検索システムを構築</p>
+                        <div class="sample-tags">
+                            <span class="tag">実践</span>
+                            <span class="tag">検索</span>
+                            <span class="tag">フィルタ</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Resources -->
+        <section class="resources">
+            <h3>参考リンク</h3>
+            <div class="resources-grid">
+                <a href="https://leafletjs.com/" target="_blank" rel="noopener" class="resource-link">
+                    <span>🍃</span>
+                    <div>Leaflet公式サイト</div>
+                </a>
+                <a href="https://leafletjs.com/reference.html" target="_blank" rel="noopener" class="resource-link">
+                    <span>📖</span>
+                    <div>APIリファレンス</div>
+                </a>
+                <a href="https://leafletjs.com/examples.html" target="_blank" rel="noopener" class="resource-link">
+                    <span>📚</span>
+                    <div>公式チュートリアル</div>
+                </a>
+                <a href="https://github.com/" target="_blank" rel="noopener" class="resource-link">
+                    <span>🐙</span>
+                    <div>GitHub リポジトリ</div>
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>Leaflet.js 学習用サンプル集</p>
+        <p><small>Powered by <a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a> | Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</small></p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Hero section mini map
+        const map = L.map('hero-map', {
+            zoomControl: false,
+            attributionControl: false
+        }).setView([35.6812, 139.7671], 12);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        // Sample markers
+        const locations = [
+            [35.6812, 139.7671],
+            [35.6896, 139.7006],
+            [35.6580, 139.7016],
+            [35.7141, 139.7774],
+            [35.6284, 139.7387]
+        ];
+
+        locations.forEach(loc => {
+            L.circleMarker(loc, {
+                radius: 6,
+                fillColor: '#2e7d32',
+                color: '#fff',
+                weight: 2,
+                fillOpacity: 0.8
+            }).addTo(map);
+        });
+
+        // Disable map interaction on hero
+        map.dragging.disable();
+        map.touchZoom.disable();
+        map.doubleClickZoom.disable();
+        map.scrollWheelZoom.disable();
+    </script>
+</body>
+</html>
